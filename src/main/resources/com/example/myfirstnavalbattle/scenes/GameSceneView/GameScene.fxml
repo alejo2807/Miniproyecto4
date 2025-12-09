@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.control.Label?>
+<AnchorPane xmlns="http://javafx.com/javafx"
+            stylesheets="@GameSceneStyle.css"
+            styleClass="AnchorPane"
+            fx:id="anchorPane"
+            fx:controller="com.example.myfirstnavalbattle.controller.GameController"
+            xmlns:fx="http://javafx.com/fxml"
+            prefHeight="400.0" prefWidth="600.0">
+
+    <GridPane fx:id="gridPaneIA"
+              layoutX="800" layoutY="220" styleClass="GridPane">
+    </GridPane>
+
+    <GridPane fx:id="gridPanePlayer"
+              layoutX="300" layoutY="220" styleClass="GridPane">
+    </GridPane>
+
+    <Button layoutY="20" layoutX="20"
+            styleClass="back-button"
+            onAction="#handleBackButton">
+    </Button>
+
+    <Circle layoutX="350" layoutY="165"
+            radius="50"
+            styleClass="Circle">
+    </Circle>
+
+    <Circle layoutX="855" layoutY="165"
+            radius="50"
+            styleClass="Circle">
+    </Circle>
+
+    <Circle layoutX="350" layoutY="165"
+            radius="50"
+            fx:id="playerOneCharacter">
+    </Circle>
+
+
+    <Circle layoutX="855" layoutY="165"
+            radius="50"
+            fx:id="playerTwoCharacter">
+    </Circle>
+
+    <Label fx:id="labelName"
+           layoutX="415" layoutY="145"
+           styleClass="Title">
+    </Label>
+
+    <Label text="Jugador IA"
+           layoutX="920" layoutY="145"
+           styleClass="Title">
+    </Label>
+
+</AnchorPane>

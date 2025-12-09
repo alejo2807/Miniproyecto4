@@ -1,0 +1,56 @@
+.AnchorPane{
+    -fx-background-image: url("../../Images/backgrounds/backgroundGame.jpg");
+    -fx-background-size: cover; /* o contain, según prefieras */
+    -fx-background-position: center center;
+    -fx-pref-width: 1366;
+    -fx-pref-height: 690;
+}
+
+.GridPane{
+    -fx-border-radius: 5px;
+    -fx-border-width: 5px;
+    -fx-border-color: white;
+    -fx-background-image: url("../../Images/backgrounds/backgroundGridPane.jpg");
+}
+
+.StackPane{
+    -fx-background-color: transparent;
+    -fx-border-color: white;
+    -fx-border-width: 1px;
+}
+
+.StackPane.water{
+    -fx-background-image: url("../../Images/sceneImages/MISS.png");
+    -fx-background-size: cover;
+    -fx-background-position: center center;
+}
+
+.StackPane.hit{
+    -fx-background-color: yellow;
+}
+
+.StackPane.killed{
+    -fx-background-color: red;
+}
+
+.back-button{
+    -fx-background-image: url("../../Images/sceneImages/backImage.png");
+    -fx-min-width: 140;
+    -fx-min-height: 140;
+    -fx-background-color: transparent;
+}
+
+.back-button:hover{
+    -fx-background-image: url("../../Images/sceneImages/backImageHover.png");
+}
+
+.Circle{
+    -fx-fill: rgba(0, 0, 0, 0.7);
+}
+
+.Title{
+    -fx-font-family: "Open Sans Bold";
+    -fx-font-size: 30;
+    -fx-text-fill: white;
+    -fx-spacing: -4px;
+}
