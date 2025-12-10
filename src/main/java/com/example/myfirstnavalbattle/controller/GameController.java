@@ -1,6 +1,5 @@
 package com.example.myfirstnavalbattle.controller;
 
-
 import com.example.myfirstnavalbattle.controller.setupStage.Ship;
 import com.example.myfirstnavalbattle.model.Board;
 import com.example.myfirstnavalbattle.model.ModelCell;
@@ -22,14 +21,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class GameController {
-    @FXML AnchorPane anchorPane;
-    @FXML private GridPane gridPanePlayer;
-    @FXML private GridPane gridPaneIA;
-    @FXML Circle playerOneCharacter;
-    @FXML Circle playerTwoCharacter;
-    @FXML Label labelName;
+    @FXML
+    AnchorPane anchorPane;
+    @FXML
+    private GridPane gridPanePlayer;
+    @FXML
+    private GridPane gridPaneIA;
+    @FXML
+    Circle playerOneCharacter;
+    @FXML
+    Circle playerTwoCharacter;
+    @FXML
+    Label labelName;
 
     private static Player playerOne;
     private static Player playerIA;
@@ -43,6 +50,9 @@ public class GameController {
 
     private ArrayList<StackPane> stackPanesPlayerAlive;
     private ArrayList<ImageView> iaShipsImageView = null;
+
+    // Cola de objetivos prioritarios para la IA (estructura de datos: Queue)
+    private Queue<int[]> objetivosIA;
 
     public GameController() {
     }
@@ -69,6 +79,7 @@ public class GameController {
         playerShips = playerOneBoard.getShips();
         iaShips = playerIABoard.getShips();
         iaShipsImageView = new ArrayList<>();
+        objetivosIA = new LinkedList<>(); // Inicializar cola de objetivos
 
         initGridPane(gridPanePlayer, margins, size, 45);
         initGridPane(gridPaneIA, margins, size, 45);
@@ -84,20 +95,19 @@ public class GameController {
             for (int col = 0; col < size; col++) {
 
                 StackPane stackPane = new StackPane();
-                stackPane.setPrefSize(stackSize,stackSize);
+                stackPane.setPrefSize(stackSize, stackSize);
                 stackPane.getStyleClass().add("StackPane");
 
                 GridPane.setRowIndex(stackPane, row);
                 GridPane.setColumnIndex(stackPane, col);
                 gridPane.getChildren().add(stackPane);
 
-                stackPane.setUserData(new int[]{row, col});
+                stackPane.setUserData(new int[] { row, col });
 
                 if (gridPane == gridPaneIA) {
                     stackPanesOfIA[row][col] = stackPane;
                     stackPaneListener(stackPane);
-                }
-                else{
+                } else {
                     stackPanesOfPlayer[row][col] = stackPane;
                     stackPanesPlayerAlive.add(stackPane);
                 }
@@ -105,8 +115,7 @@ public class GameController {
         }
     }
 
-
-    private void initShips(){
+    private void initShips() {
         for (int index = 0; index < iaShips.size(); index++) {
             Ship playerShip = playerShips.get(index);
             Ship iaShip = iaShips.get(index);
@@ -132,7 +141,7 @@ public class GameController {
         int size = ship.getSize();
 
         int width = 43;
-        int height = (45*size)-10;
+        int height = (45 * size) - 10;
 
         gridPane.add(shipImage, col, row);
         if (vertical) {
@@ -140,8 +149,7 @@ public class GameController {
             shipImage.setFitWidth(width);
             GridPane.setColumnSpan(shipImage, 1);
             GridPane.setRowSpan(shipImage, size);
-        }
-        else{
+        } else {
             shipImage.setFitHeight(width);
             shipImage.setFitWidth(height);
             GridPane.setColumnSpan(shipImage, size);
@@ -150,10 +158,9 @@ public class GameController {
         shipImage.setUserData(coords);
     }
 
-
     private void stackPaneListener(StackPane stackPane) {
         stackPane.setOnMouseClicked(mouseEvent -> {
-            if(!playerOne.isHasPlayed()){
+            if (!playerOne.isHasPlayed()) {
                 stackPane.setDisable(true);
                 int[] coords = (int[]) stackPane.getUserData();
                 shootInGame(playerIA, playerIABoard, coords[0], coords[1], stackPane);
@@ -168,14 +175,13 @@ public class GameController {
         if (status == ModelCell.Status.MISS) {
             stackPane.getStyleClass().add("water");
             nextTurn();
-        }
-        else if (status == ModelCell.Status.HIT) {
+        } else if (status == ModelCell.Status.HIT) {
             stackPane.getStyleClass().add("hit");
             if (playerIsIA) {
+                agregarObjetivosAdyacentes(row, col); // Agregar celdas vecinas a la cola
                 randomShoot();
             }
-        }
-        else if (status == ModelCell.Status.KILLED) {
+        } else if (status == ModelCell.Status.KILLED) {
             Ship targetShip = board.getShip(row, col);
             int[] targetCoords = (int[]) targetShip.getUserData();
             int shipRow = targetCoords[0];
@@ -186,9 +192,9 @@ public class GameController {
             }
 
             setStackPaneState(player, shipRow, shipCol, targetShip.getSize(), targetShip.isVertical());
-            if(player.isHasLost()){
+            if (player.isHasLost()) {
                 finishGame();
-                if(playerIsIA)
+                if (playerIsIA)
                     System.out.println("playerOne has lost");
                 else
                     System.out.println("playerIA has lost");
@@ -198,12 +204,28 @@ public class GameController {
         }
     }
 
-    private void randomShoot(){
-        Collections.shuffle(stackPanesPlayerAlive);
-        StackPane stackPane = stackPanesPlayerAlive.get(0);
+    private void randomShoot() {
+        StackPane stackPane = null;
 
-        if(stackPane != null && !playerOne.isHasLost()){
-            stackPanesPlayerAlive.remove(0);
+        // Primero intentar usar objetivos de la cola (IA inteligente)
+        while (!objetivosIA.isEmpty() && stackPane == null) {
+            int[] objetivo = objetivosIA.poll();
+            int targetRow = objetivo[0];
+            int targetCol = objetivo[1];
+
+            if (esObjetivoValido(targetRow, targetCol)) {
+                stackPane = stackPanesOfPlayer[targetRow][targetCol];
+            }
+        }
+
+        // Si no hay objetivos válidos en la cola, disparo aleatorio
+        if (stackPane == null && !stackPanesPlayerAlive.isEmpty()) {
+            Collections.shuffle(stackPanesPlayerAlive);
+            stackPane = stackPanesPlayerAlive.get(0);
+        }
+
+        if (stackPane != null && !playerOne.isHasLost()) {
+            stackPanesPlayerAlive.remove(stackPane);
             stackPane.setStyle("-fx-border-color: red;");
             int[] coords = (int[]) stackPane.getUserData();
             int row = coords[0];
@@ -213,29 +235,56 @@ public class GameController {
         }
     }
 
-    private void nextTurn(){
+    /**
+     * Agrega las celdas adyacentes (arriba, abajo, izquierda, derecha) a la cola de
+     * objetivos.
+     * Esto hace que la IA sea más inteligente al "cazar" barcos después de un
+     * acierto.
+     */
+    private void agregarObjetivosAdyacentes(int row, int col) {
+        int[][] direcciones = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } }; // arriba, abajo, izq, der
+        for (int[] dir : direcciones) {
+            int newRow = row + dir[0];
+            int newCol = col + dir[1];
+            if (esObjetivoValido(newRow, newCol)) {
+                objetivosIA.offer(new int[] { newRow, newCol });
+            }
+        }
+    }
+
+    /**
+     * Verifica si una celda es un objetivo válido para la IA.
+     * Debe estar dentro del tablero y no haber sido disparada aún.
+     */
+    private boolean esObjetivoValido(int row, int col) {
+        if (row < 0 || row >= SetupController.GRID_SIZE || col < 0 || col >= SetupController.GRID_SIZE) {
+            return false;
+        }
+        StackPane stackPane = stackPanesOfPlayer[row][col];
+        return stackPanesPlayerAlive.contains(stackPane);
+    }
+
+    private void nextTurn() {
         if (!playerOne.isHasPlayed()) {
             playerOne.setHasPlayed(true);
             playerIA.setHasPlayed(false);
             randomShoot();
-        }
-        else {
+        } else {
             playerOne.setHasPlayed(false);
             playerIA.setHasPlayed(true);
         }
     }
 
     private void setStackPaneState(Player player, int row, int col, int size, boolean vertical) {
-        int init = vertical? row : col;
+        int init = vertical ? row : col;
 
         for (int target = init; target < init + size; target++) {
 
             StackPane stackPane;
             if (vertical) {
-                stackPane = getStackPane(player, target, col); //iteras el row
-            }
-            else{
-                stackPane = getStackPane(player, row, target); //iteras el col
+                stackPane = getStackPane(player, target, col); // iteras el row
+            } else {
+                stackPane = getStackPane(player, row, target); // iteras el col
             }
             assert stackPane != null;
             stackPane.getStyleClass().add("killed");
@@ -245,20 +294,19 @@ public class GameController {
     private StackPane getStackPane(Player player, int row, int col) {
         if (player == playerIA) {
             return stackPanesOfIA[row][col];
-        }
-        else {
+        } else {
             return stackPanesOfPlayer[row][col];
         }
     }
 
-    private void setIAView(boolean show){
+    private void setIAView(boolean show) {
         for (ImageView imageView : iaShipsImageView) {
             imageView.setVisible(show);
         }
     }
 
     private void setImageVisibility(int row, int col) {
-        int[] coords = new int[]{row, col};
+        int[] coords = new int[] { row, col };
         for (ImageView imageView : iaShipsImageView) {
 
             int[] imageCoords = (int[]) imageView.getUserData();
@@ -283,7 +331,7 @@ public class GameController {
         });
     }
 
-    private void finishGame(){
+    private void finishGame() {
         for (StackPane[] stackPaneArray : stackPanesOfIA) {
             for (StackPane stackPane : stackPaneArray) {
                 stackPane.setDisable(true);

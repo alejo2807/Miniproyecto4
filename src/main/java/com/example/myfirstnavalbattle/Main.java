@@ -24,7 +24,7 @@ public class Main extends Application {
         mainStage.show();
     }
 
-    private void loadFonts(){
+    private void loadFonts() {
         InputStream fontSansBold = getClass().getResourceAsStream(
                 "/com/example/myfirstnavalbattle/Fonts/OpenSans-Bold.ttf");
         InputStream fontSansRegular = getClass().getResourceAsStream(
@@ -34,5 +34,7 @@ public class Main extends Application {
         Font.loadFont(fontSansRegular, 12);
     }
 
-    public static void main(String[] args) {launch();}
+    public static void main(String[] args) {
+        launch();
+    }
 }

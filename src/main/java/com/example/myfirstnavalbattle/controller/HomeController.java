@@ -5,18 +5,15 @@ import com.example.myfirstnavalbattle.model.SelectCharacter;
 import com.example.myfirstnavalbattle.view.SceneManager;
 import javafx.fxml.FXML;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public class HomeController {
-    @FXML private Circle circleCharacter;
+    @FXML
+    private Circle circleCharacter;
     Characters selectedCharacter;
-
 
     @FXML
     private void initialize() {
@@ -26,14 +23,13 @@ public class HomeController {
         circleCharacter.setFill(new ImagePattern(image));
     }
 
-
     @FXML
     private void handlePlay() throws IOException {
         SceneManager.switchTo("SetupScene");
     }
 
     @FXML
-    private void handleContinue(){
+    private void handleContinue() {
         System.out.println("Continue");
     }
 
