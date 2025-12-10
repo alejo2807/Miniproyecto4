@@ -95,7 +95,7 @@ public class GameController {
         iaShips = playerIABoard.getShips();
         iaShipsImageView = new ArrayList<>();
         objetivosIA = new LinkedList<>(); // Inicializar cola de objetivos
-        playerStats = new GameStatistics(); // Inicializar estadísticas del jugador
+        playerStats = GameStatistics.getInstance(); // Obtener instancia singleton
         navesDestruidas = new Stack<>(); // Inicializar stack de naves destruidas
 
         initGridPane(gridPanePlayer, margins, size, 45);
