@@ -367,6 +367,20 @@ public class GameController {
         System.out.println("\n=== ESTADÍSTICAS DEL JUGADOR ===");
         System.out.println(playerStats.getSummary());
         System.out.println("================================\n");
+
+        // Mostrar ventana de victoria o derrota
+        try {
+            if (playerIA.isHasLost()) {
+                // El jugador humano ganó
+                SceneManager.switchTo("VictoryScene");
+            } else if (playerOne.isHasLost()) {
+                // El jugador humano perdió
+                SceneManager.switchTo("LostScene");
+            }
+        } catch (IOException e) {
+            System.err.println("Error al cargar la escena de fin de juego: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
