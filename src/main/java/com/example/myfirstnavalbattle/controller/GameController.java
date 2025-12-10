@@ -17,6 +17,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,6 +41,8 @@ public class GameController {
     Circle playerTwoCharacter;
     @FXML
     Label labelName;
+    @FXML
+    private Label labelShipDestroyed;
 
     private static Player playerOne;
     private static Player playerIA;
@@ -61,6 +65,9 @@ public class GameController {
 
     // Stack para naves destruidas por el jugador (estructura de datos: Stack)
     private Stack<Ship> navesDestruidas;
+
+    // Timer para ocultar la notificación de barco hundido
+    private PauseTransition hideNotification;
 
     public GameController() {
     }
@@ -190,7 +197,7 @@ public class GameController {
             } else {
                 playerStats.incrementStat("aciertos");
                 if (status == ModelCell.Status.KILLED) {
-                    playerStats.incrementStat("navesDestruidas");
+                    playerStats.incrementStat("barcosHundidos");
                 }
             }
         }
@@ -213,6 +220,7 @@ public class GameController {
             if (!playerIsIA) {
                 setImageVisibility(shipRow, shipCol);
                 navesDestruidas.push(targetShip); // Agregar barco hundido al Stack
+                showShipDestroyedNotification(targetShip); // Mostrar notificación temporal
             }
 
             setStackPaneState(player, shipRow, shipCol, targetShip.getSize(), targetShip.isVertical());
@@ -226,6 +234,38 @@ public class GameController {
                 randomShoot();
             }
         }
+    }
+
+    /**
+     * Muestra una notificación temporal cuando el jugador hunde un barco enemigo.
+     * La notificación aparece durante 3 segundos y luego desaparece
+     * automáticamente.
+     * Si se hunde otro barco antes de que termine el timer, se cancela y muestra el
+     * nuevo.
+     * 
+     * @param ship El barco que fue hundido
+     */
+    private void showShipDestroyedNotification(Ship ship) {
+        // Cancelar el timer anterior si existe
+        if (hideNotification != null) {
+            hideNotification.stop();
+        }
+
+        // Actualizar el texto del label con el barco hundido
+        int shipSize = ship.getSize();
+        labelShipDestroyed.setText("¡Has hundido un Barco tamaño " + shipSize + "!");
+
+        // Hacer visible el label
+        labelShipDestroyed.setVisible(true);
+
+        // Crear nuevo timer de 3 segundos para ocultar la notificación
+        hideNotification = new PauseTransition(Duration.seconds(3));
+        hideNotification.setOnFinished(event -> {
+            labelShipDestroyed.setVisible(false);
+        });
+
+        // Iniciar el timer
+        hideNotification.play();
     }
 
     private void randomShoot() {

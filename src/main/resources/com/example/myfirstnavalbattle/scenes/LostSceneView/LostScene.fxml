@@ -14,13 +14,13 @@
             <Image url="@../../Images/backgrounds/background.jpg" />
          </image>
       </ImageView>
-      <Rectangle height="812.0" layoutX="785.0" opacity="0.7" styleClass="rectangles" width="465.0" />
+      <Rectangle height="1002.0" layoutX="785.0" opacity="0.7" styleClass="rectangles" width="465.0" />
       <Label id="titleLabel" layoutX="874.0" layoutY="266.0" prefHeight="90.0" prefWidth="306.0" styleClass="title-label1" stylesheets="@VictoryAndLostStyle.css" text="Perdiste :(" textFill="WHITE">
          <font>
             <Font size="61.0" />
          </font>
       </Label>
-      <Label id="titleLabel" layoutX="791.0" layoutY="414.0" prefHeight="103.0" prefWidth="452.0" styleClass="title-label1" stylesheets="@VictoryAndLostStyle.css" text="Presiona Esc para volver al menu inicial" textFill="WHITE">
+      <Label id="titleLabel" layoutX="791.0" layoutY="414.0" prefHeight="103.0" prefWidth="452.0" styleClass="title-label1" text="Presiona Esc para volver al menu inicial" textFill="WHITE">
          <font>
             <Font size="26.0" />
          </font>
