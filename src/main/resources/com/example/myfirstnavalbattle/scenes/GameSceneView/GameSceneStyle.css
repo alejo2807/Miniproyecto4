@@ -58,6 +58,7 @@
 
 .ship-notification {
     -fx-font-family: "Open Sans Bold";
+<<<<<<< HEAD
     -fx-font-size: 28;
     -fx-text-fill: #FFFFFF;
     -fx-background-color: linear-gradient(to right, #FF6B35, #FF8E53);
@@ -68,4 +69,14 @@
     -fx-background-radius: 10px;
     -fx-effect: dropshadow(gaussian, rgba(255, 107, 53, 0.8), 15, 0.7, 0, 0);
     -fx-font-weight: bold;
+=======
+    -fx-font-size: 24;
+    -fx-text-fill: #FFD700;
+    -fx-background-color: rgba(0, 100, 0, 0.8);
+    -fx-padding: 10 20 10 20;
+    -fx-border-color: #FFD700;
+    -fx-border-width: 2px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+>>>>>>> origin/main
 }

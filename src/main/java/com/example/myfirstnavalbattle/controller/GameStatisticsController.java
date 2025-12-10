@@ -8,16 +8,21 @@ import javafx.scene.control.Label;
 import java.io.IOException;
 
 /**
+<<<<<<< HEAD
  * Controller for the Game Statistics Scene
  * Displays player statistics and handles navigation back to home
  * 
  * @author 4rias01
+=======
+ * Controlador para la escena de estadísticas del jugador
+>>>>>>> origin/main
  */
 public class GameStatisticsController {
 
     @FXML
     private Label labelStats;
 
+<<<<<<< HEAD
     // TODO: Create a static instance that can be accessed from anywhere
     private static GameStatistics gameStats = new GameStatistics();
 
@@ -47,5 +52,19 @@ public class GameStatisticsController {
             System.err.println("Error returning to home: " + e.getMessage());
             e.printStackTrace();
         }
+=======
+    @FXML
+    public void initialize() {
+        // Obtener la instancia singleton de GameStatistics
+        GameStatistics stats = GameStatistics.getInstance();
+
+        // Actualizar el label con el resumen de estadísticas
+        labelStats.setText(stats.getSummary());
+    }
+
+    @FXML
+    private void handleBack() throws IOException {
+        SceneManager.switchTo("HomeScene");
+>>>>>>> origin/main
     }
 }

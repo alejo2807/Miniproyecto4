@@ -11,8 +11,11 @@ import java.io.IOException;
 /**
  * Controller for the Victory Scene
  * Handles the ESC key press to return to the Home Scene
+<<<<<<< HEAD
  * 
  * @author 4rias01
+=======
+>>>>>>> origin/main
  */
 public class VictoryController {
 
@@ -44,6 +47,7 @@ public class VictoryController {
             }
         });
     }
+<<<<<<< HEAD
 
     /**
      * Handles the button to return to home
@@ -57,4 +61,6 @@ public class VictoryController {
             e.printStackTrace();
         }
     }
+=======
+>>>>>>> origin/main
 }

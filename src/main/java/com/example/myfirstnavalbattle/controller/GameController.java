@@ -18,6 +18,10 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
+<<<<<<< HEAD
+=======
+import javafx.animation.PauseTransition;
+>>>>>>> origin/main
 import javafx.util.Duration;
 
 import java.io.IOException;
@@ -95,7 +99,11 @@ public class GameController {
         iaShips = playerIABoard.getShips();
         iaShipsImageView = new ArrayList<>();
         objetivosIA = new LinkedList<>(); // Inicializar cola de objetivos
+<<<<<<< HEAD
         playerStats = GameStatisticsController.getGameStatistics(); // Obtener instancia compartida de estadísticas
+=======
+        playerStats = GameStatistics.getInstance(); // Obtener instancia singleton
+>>>>>>> origin/main
         navesDestruidas = new Stack<>(); // Inicializar stack de naves destruidas
 
         initGridPane(gridPanePlayer, margins, size, 45);
@@ -197,7 +205,7 @@ public class GameController {
             } else {
                 playerStats.incrementStat("aciertos");
                 if (status == ModelCell.Status.KILLED) {
-                    playerStats.incrementStat("navesDestruidas");
+                    playerStats.incrementStat("barcosHundidos");
                 }
             }
         }
@@ -220,7 +228,11 @@ public class GameController {
             if (!playerIsIA) {
                 setImageVisibility(shipRow, shipCol);
                 navesDestruidas.push(targetShip); // Agregar barco hundido al Stack
+<<<<<<< HEAD
                 showShipDestroyedNotification(targetShip); // Mostrar notificación
+=======
+                showShipDestroyedNotification(targetShip); // Mostrar notificación temporal
+>>>>>>> origin/main
             }
 
             setStackPaneState(player, shipRow, shipCol, targetShip.getSize(), targetShip.isVertical());
@@ -234,6 +246,38 @@ public class GameController {
                 randomShoot();
             }
         }
+    }
+
+    /**
+     * Muestra una notificación temporal cuando el jugador hunde un barco enemigo.
+     * La notificación aparece durante 3 segundos y luego desaparece
+     * automáticamente.
+     * Si se hunde otro barco antes de que termine el timer, se cancela y muestra el
+     * nuevo.
+     * 
+     * @param ship El barco que fue hundido
+     */
+    private void showShipDestroyedNotification(Ship ship) {
+        // Cancelar el timer anterior si existe
+        if (hideNotification != null) {
+            hideNotification.stop();
+        }
+
+        // Actualizar el texto del label con el barco hundido
+        int shipSize = ship.getSize();
+        labelShipDestroyed.setText("¡Has hundido un Barco tamaño " + shipSize + "!");
+
+        // Hacer visible el label
+        labelShipDestroyed.setVisible(true);
+
+        // Crear nuevo timer de 3 segundos para ocultar la notificación
+        hideNotification = new PauseTransition(Duration.seconds(3));
+        hideNotification.setOnFinished(event -> {
+            labelShipDestroyed.setVisible(false);
+        });
+
+        // Iniciar el timer
+        hideNotification.play();
     }
 
     private void randomShoot() {
@@ -412,11 +456,17 @@ public class GameController {
         try {
             if (playerIA.isHasLost()) {
                 // El jugador humano ganó
+<<<<<<< HEAD
                 System.out.println("[GAME] Jugador GANÓ - Cambiando a VictoryScene");
                 SceneManager.switchTo("VictoryScene");
             } else if (playerOne.isHasLost()) {
                 // El jugador humano perdió
                 System.out.println("[GAME] Jugador PERDIÓ - Cambiando a LostScene");
+=======
+                SceneManager.switchTo("VictoryScene");
+            } else if (playerOne.isHasLost()) {
+                // El jugador humano perdió
+>>>>>>> origin/main
                 SceneManager.switchTo("LostScene");
             }
         } catch (IOException e) {

@@ -11,8 +11,11 @@ import java.io.IOException;
 /**
  * Controller for the Lost Scene
  * Handles the ESC key press to return to the Home Scene
+<<<<<<< HEAD
  * 
  * @author 4rias01
+=======
+>>>>>>> origin/main
  */
 public class LostController {
 
@@ -44,6 +47,7 @@ public class LostController {
             }
         });
     }
+<<<<<<< HEAD
 
     /**
      * Handles the button to return to home
@@ -57,4 +61,6 @@ public class LostController {
             e.printStackTrace();
         }
     }
+=======
+>>>>>>> origin/main
 }

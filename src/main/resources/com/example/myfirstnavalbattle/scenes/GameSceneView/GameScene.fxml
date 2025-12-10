@@ -36,7 +36,11 @@
     <Label layoutX="920" layoutY="145" styleClass="Title" text="Jugador CPU">
     </Label>
 
+<<<<<<< HEAD
     <Label fx:id="labelShipDestroyed" layoutX="280" layoutY="700" styleClass="ship-notification" stylesheets="@GameSceneStyle.css" visible="false">
+=======
+    <Label fx:id="labelShipDestroyed" layoutX="305" layoutY="680" styleClass="ship-notification" visible="false">
+>>>>>>> origin/main
     </Label>
 
 </AnchorPane>

@@ -7,13 +7,15 @@ import javafx.fxml.FXML;
 import javafx.scene.image.Image;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
-
+import javafx.scene.control.Button;
 import java.io.IOException;
 
 public class HomeController {
     @FXML
     private Circle circleCharacter;
     Characters selectedCharacter;
+    @FXML
+    private Button settingsButton;
 
     @FXML
     private void initialize() {
@@ -42,9 +44,12 @@ public class HomeController {
     private void handleSettings() throws IOException {
         SceneManager.switchTo("GameStatisticsScene");
     }
+<<<<<<< HEAD
 
     @FXML
     private void handleChangeProfile() throws IOException {
         // SceneManager.switchTo("ProfileScene");
     }
+=======
+>>>>>>> origin/main
 }

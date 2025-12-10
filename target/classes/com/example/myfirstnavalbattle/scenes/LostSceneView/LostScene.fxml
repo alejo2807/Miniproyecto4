@@ -14,15 +14,11 @@
             <Image url="@../../Images/backgrounds/background.jpg" />
          </image>
       </ImageView>
-<<<<<<< HEAD
 <<<<<<<< HEAD:src/main/resources/com/example/myfirstnavalbattle/scenes/LostSceneView/LostScene.fxml
       <Rectangle height="1140.0" layoutX="785.0" opacity="0.7" styleClass="rectangles" width="465.0" />
 ========
       <Rectangle height="1002.0" layoutX="785.0" opacity="0.7" styleClass="rectangles" width="465.0" />
 >>>>>>>> origin/main:target/classes/com/example/myfirstnavalbattle/scenes/LostSceneView/LostScene.fxml
-=======
-      <Rectangle height="1002.0" layoutX="785.0" opacity="0.7" styleClass="rectangles" width="465.0" />
->>>>>>> origin/main
       <Label id="titleLabel" layoutX="874.0" layoutY="266.0" prefHeight="90.0" prefWidth="306.0" styleClass="title-label1" stylesheets="@VictoryAndLostStyle.css" text="Perdiste :(" textFill="WHITE">
          <font>
             <Font size="61.0" />

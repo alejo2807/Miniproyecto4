@@ -10,15 +10,37 @@ import java.util.HashMap;
  * @author 4rias01
  */
 public class GameStatistics {
+    // Instancia única (Singleton) para compartir estadísticas entre escenas
+    private static GameStatistics instance;
+
     // Estructura de datos: HashMap para almacenar métricas del jugador
     private HashMap<String, Integer> stats;
 
     /**
-     * Constructor que inicializa el HashMap con las estadísticas en 0
+     * Constructor privado para patrón Singleton
      */
-    public GameStatistics() {
+    private GameStatistics() {
         stats = new HashMap<>();
         initializeStats();
+    }
+
+    /**
+     * Obtiene la instancia única de GameStatistics (Singleton)
+     * 
+     * @return La instancia compartida de GameStatistics
+     */
+    public static GameStatistics getInstance() {
+        if (instance == null) {
+            instance = new GameStatistics();
+        }
+        return instance;
+    }
+
+    /**
+     * Resetea la instancia global (útil para empezar un nuevo juego)
+     */
+    public static void resetInstance() {
+        instance = new GameStatistics();
     }
 
     /**
