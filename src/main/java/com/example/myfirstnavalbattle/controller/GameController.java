@@ -2,6 +2,7 @@ package com.example.myfirstnavalbattle.controller;
 
 import com.example.myfirstnavalbattle.controller.setupStage.Ship;
 import com.example.myfirstnavalbattle.model.Board;
+import com.example.myfirstnavalbattle.model.GameStatistics;
 import com.example.myfirstnavalbattle.model.ModelCell;
 import com.example.myfirstnavalbattle.model.Player;
 import com.example.myfirstnavalbattle.view.SceneManager;
@@ -23,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Stack;
 
 public class GameController {
     @FXML
@@ -54,6 +56,12 @@ public class GameController {
     // Cola de objetivos prioritarios para la IA (estructura de datos: Queue)
     private Queue<int[]> objetivosIA;
 
+    // Estadísticas del jugador (estructura de datos: HashMap)
+    private GameStatistics playerStats;
+
+    // Stack para naves destruidas por el jugador (estructura de datos: Stack)
+    private Stack<Ship> navesDestruidas;
+
     public GameController() {
     }
 
@@ -80,6 +88,8 @@ public class GameController {
         iaShips = playerIABoard.getShips();
         iaShipsImageView = new ArrayList<>();
         objetivosIA = new LinkedList<>(); // Inicializar cola de objetivos
+        playerStats = new GameStatistics(); // Inicializar estadísticas del jugador
+        navesDestruidas = new Stack<>(); // Inicializar stack de naves destruidas
 
         initGridPane(gridPanePlayer, margins, size, 45);
         initGridPane(gridPaneIA, margins, size, 45);
@@ -172,6 +182,19 @@ public class GameController {
         ModelCell.Status status = player.shoot(row, col);
         boolean playerIsIA = (player == playerOne);
 
+        // Registrar estadísticas del jugador humano (no de la IA)
+        if (!playerIsIA) {
+            playerStats.incrementStat("disparosTotales");
+            if (status == ModelCell.Status.MISS) {
+                playerStats.incrementStat("fallos");
+            } else {
+                playerStats.incrementStat("aciertos");
+                if (status == ModelCell.Status.KILLED) {
+                    playerStats.incrementStat("navesDestruidas");
+                }
+            }
+        }
+
         if (status == ModelCell.Status.MISS) {
             stackPane.getStyleClass().add("water");
             nextTurn();
@@ -189,6 +212,7 @@ public class GameController {
 
             if (!playerIsIA) {
                 setImageVisibility(shipRow, shipCol);
+                navesDestruidas.push(targetShip); // Agregar barco hundido al Stack
             }
 
             setStackPaneState(player, shipRow, shipCol, targetShip.getSize(), targetShip.isVertical());
@@ -238,7 +262,7 @@ public class GameController {
     /**
      * Agrega las celdas adyacentes (arriba, abajo, izquierda, derecha) a la cola de
      * objetivos.
-     * Esto hace que la IA sea más inteligente al "cazar" barcos después de un
+     * Esto hace que la IA sea más inteligente al "cazar" naves después de un
      * acierto.
      */
     private void agregarObjetivosAdyacentes(int row, int col) {
@@ -337,6 +361,41 @@ public class GameController {
                 stackPane.setDisable(true);
             }
         }
+
+        // Mostrar naves destruidas y estadísticas
+        mostrarNavesDestruidas();
+        System.out.println("\n=== ESTADÍSTICAS DEL JUGADOR ===");
+        System.out.println(playerStats.getSummary());
+        System.out.println("================================\n");
+    }
+
+    /**
+     * Muestra la lista de barcos hundidos por el jugador en orden LIFO.
+     * Demuestra el uso de la estructura de datos Stack.
+     */
+    private void mostrarNavesDestruidas() {
+        System.out.println("\n=== Naves Destruidas (Orden de Hundimiento - Mas reciente al mas antiguo) ===");
+
+        if (navesDestruidas.isEmpty()) {
+            System.out.println("No hundiste ninguna nave.");
+        } else {
+            Stack<Ship> temp = new Stack<>();
+            int position = 1;
+
+            // Mostrar del más reciente al más antiguo (LIFO)
+            while (!navesDestruidas.isEmpty()) {
+                Ship ship = navesDestruidas.pop();
+                temp.push(ship);
+                System.out.printf("%d. Nave de tamaño %d%n", position++, ship.getSize());
+            }
+
+            // Restaurar el stack para mantener el estado
+            while (!temp.isEmpty()) {
+                navesDestruidas.push(temp.pop());
+            }
+        }
+
+        System.out.println("=============================================\n");
     }
 
     public static void setPlayerOne(Player player) {
