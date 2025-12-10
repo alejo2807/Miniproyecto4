@@ -2,6 +2,7 @@ package com.example.myfirstnavalbattle.controller;
 
 import com.example.myfirstnavalbattle.controller.setupStage.Cell;
 import com.example.myfirstnavalbattle.controller.setupStage.Ship;
+import com.example.myfirstnavalbattle.model.AIShipPlacementThread;
 import com.example.myfirstnavalbattle.model.Characters;
 import com.example.myfirstnavalbattle.model.Player;
 import com.example.myfirstnavalbattle.model.SelectCharacter;
@@ -40,13 +41,21 @@ public class SetupController {
     private int currentShipCol;
     private int currentShipSize;
 
-    @FXML private GridPane gridpane;
-    @FXML private HBox hBox;
-    @FXML private Button readyButton;
-    @FXML private ImageView characterImage;
-    @FXML private TextField userNameTextField;
-    @FXML private Rectangle rectangle;
+    // Hilo para posicionar barcos de la IA en segundo plano
+    private AIShipPlacementThread aiPlacementThread;
 
+    @FXML
+    private GridPane gridpane;
+    @FXML
+    private HBox hBox;
+    @FXML
+    private Button readyButton;
+    @FXML
+    private ImageView characterImage;
+    @FXML
+    private TextField userNameTextField;
+    @FXML
+    private Rectangle rectangle;
 
     @FXML
     public void initialize() {
@@ -61,6 +70,10 @@ public class SetupController {
         gridpane.setMaxSize(500, 500);
         gridpane.setMinSize(500, 500);
 
+        // Crear e iniciar hilo de posicionamiento de IA
+        aiPlacementThread = new AIShipPlacementThread();
+        aiPlacementThread.start();
+        System.out.println("[SETUP] Hilo de IA iniciado en segundo plano");
     }
 
     private void shipOnDragListener(Ship ship) {
@@ -74,8 +87,11 @@ public class SetupController {
             Image snapshot = getShipSnapshot(ship);
             content.putImage(snapshot);
 
-            if (ship.isVertical()) { db.setDragView(snapshot, snapshot.getWidth() / 2, 25 );}
-            else { db.setDragView(snapshot, 25, snapshot.getHeight() / 2 );}
+            if (ship.isVertical()) {
+                db.setDragView(snapshot, snapshot.getWidth() / 2, 25);
+            } else {
+                db.setDragView(snapshot, 25, snapshot.getHeight() / 2);
+            }
 
             db.setContent(content);
             currentShip = ship;
@@ -129,13 +145,13 @@ public class SetupController {
             setCurrentShipLocation();
             setCellState(currentShipRow, currentShipCol, Cell.Status.EMPTY, null);
 
-            currentShip.setUserData(new int[]{targetRow, targetCol});
+            currentShip.setUserData(new int[] { targetRow, targetCol });
             setCurrentShipLocation();
 
             setCellState(currentShipRow, currentShipCol, Cell.Status.SHIP, currentShip);
             placeShipInGridPane();
         } else if (canBePlace) {
-            currentShip.setUserData(new int[]{targetRow, targetCol});
+            currentShip.setUserData(new int[] { targetRow, targetCol });
             setCurrentShipLocation();
 
             setCellState(currentShipRow, currentShipCol, Cell.Status.SHIP, currentShip);
@@ -150,20 +166,23 @@ public class SetupController {
 
             Cell cell;
             if (currentShipIsVertical) {
-                cell = getCell(target,col);
-            }
-            else {
-                cell = getCell(row,target);
+                cell = getCell(target, col);
+            } else {
+                cell = getCell(row, target);
             }
 
-            if (cell == null) { return false; }
-            if (cell.getStatus() == Cell.Status.SHIP) { return false; }
+            if (cell == null) {
+                return false;
+            }
+            if (cell.getStatus() == Cell.Status.SHIP) {
+                return false;
+            }
         }
         return true;
     }
 
     private void setCellState(int row, int col, Cell.Status status, Ship ship) {
-        int init = currentShipIsVertical? row : col; // variable que ira iterando el for.
+        int init = currentShipIsVertical ? row : col; // variable que ira iterando el for.
         // Si es vertical, itera el row y col permanece fijo
         // si es horizontal, el row permanece fijo y itera el col
 
@@ -171,10 +190,9 @@ public class SetupController {
 
             Cell cell;
             if (currentShipIsVertical) {
-                cell = getCell(target, col); //iteras el row
-            }
-            else{
-                cell = getCell(row, target); //iteras el col
+                cell = getCell(target, col); // iteras el row
+            } else {
+                cell = getCell(row, target); // iteras el col
             }
             assert cell != null;
             cell.setStatus(status);
@@ -182,17 +200,16 @@ public class SetupController {
         }
     }
 
-    private void placeShipInGridPane(){
-        if (currentShip.getParent() != null){
+    private void placeShipInGridPane() {
+        if (currentShip.getParent() != null) {
             ((Pane) currentShip.getParent()).getChildren().remove(currentShip);
         }
 
-        if (currentShipIsVertical){
+        if (currentShipIsVertical) {
             gridpane.add(currentShip, currentShipCol, currentShipRow);
             GridPane.setRowSpan(currentShip, currentShipSize);
             GridPane.setColumnSpan(currentShip, 1);
-        }
-        else{
+        } else {
             gridpane.add(currentShip, currentShipCol, currentShipRow);
             GridPane.setRowSpan(currentShip, 1);
             GridPane.setColumnSpan(currentShip, currentShipSize);
@@ -201,7 +218,7 @@ public class SetupController {
 
     private void clickOnShipListener(Ship ship) {
         ship.setOnMouseClicked(event -> {
-            if(event.getButton() == MouseButton.SECONDARY){
+            if (event.getButton() == MouseButton.SECONDARY) {
                 if (!(ship.getParent() instanceof GridPane)) {
                     ship.rotateShip();
                 }
@@ -210,7 +227,6 @@ public class SetupController {
                 currentShip = ship;
                 setCurrenShipAttributes();
                 setCurrentShipLocation();
-
 
                 setCellState(currentShipRow, currentShipCol, Cell.Status.EMPTY, null);
                 ((Pane) ship.getParent()).getChildren().remove(ship);
@@ -256,7 +272,7 @@ public class SetupController {
         makeAndAddShip(1);
     }
 
-    private void initUserInfo(){
+    private void initUserInfo() {
         actualCharacter = SelectCharacter.getSelectedCharacter();
         Image image = actualCharacter.getImage();
 
@@ -291,7 +307,7 @@ public class SetupController {
     }
 
     private void activateUserInfo() {
-        if(hBox.getChildren().isEmpty()){
+        if (hBox.getChildren().isEmpty()) {
             readyButton.setVisible(true);
             characterImage.setVisible(true);
             userNameTextField.setVisible(true);
@@ -301,8 +317,7 @@ public class SetupController {
             rectangle.setY(-100);
             rectangle.setWidth(510);
             rectangle.setHeight(600);
-        }
-        else{
+        } else {
             characterImage.setVisible(false);
             readyButton.setVisible(false);
             readyButton.setDisable(true);
@@ -320,7 +335,7 @@ public class SetupController {
 
     private void makeAndAddShip(int size) {
         Ship ship = new Ship(size);
-        AnimationsManager.applyCursorEvents(ship)   ;
+        AnimationsManager.applyCursorEvents(ship);
 
         shipOnDragListener(ship);
         clickOnShipListener(ship);
@@ -342,17 +357,16 @@ public class SetupController {
         return cells[row][col];
     }
 
-    private void setCurrenShipAttributes(){
+    private void setCurrenShipAttributes() {
         currentShipSize = currentShip.getSize();
         currentShipIsVertical = currentShip.isVertical();
     }
 
-    private void setCurrentShipLocation(){
+    private void setCurrentShipLocation() {
 
         int[] coords = (int[]) currentShip.getUserData();
         currentShipRow = coords[0];
         currentShipCol = coords[1];
-
 
     }
 
@@ -363,12 +377,34 @@ public class SetupController {
 
     @FXML
     private void handleReadyButton() throws IOException {
-        String playerName = userNameTextField.getText();
-        Player playerOne = new Player(playerName, cells, ships, actualCharacter);
-        Player playerIA = new Player();
+        try {
+            System.out.println("[SETUP] Jugador presionó Ready. Sincronizando con hilo IA...");
 
-        GameController.setPlayerOne(playerOne);
-        GameController.setPlayerIA(playerIA);
-        SceneManager.switchTo("GameScene");
+            // Señalar al hilo IA que comience (si aún no ha comenzado)
+            aiPlacementThread.signalStart();
+
+            // Esperar a que el hilo IA complete el posicionamiento
+            aiPlacementThread.waitForCompletion();
+
+            System.out.println("[SETUP] Sincronización completada. Iniciando juego...");
+
+            // Crear jugadores
+            String playerName = userNameTextField.getText();
+            Player playerOne = new Player(playerName, cells, ships, actualCharacter);
+
+            // Usar el tablero generado por el hilo IA
+            Player playerIA = new Player(aiPlacementThread.getAIBoard());
+
+            GameController.setPlayerOne(playerOne);
+            GameController.setPlayerIA(playerIA);
+
+            System.out.println("[SETUP] ✓ Ambos jugadores listos. Cambiando a GameScene");
+            SceneManager.switchTo("GameScene");
+
+        } catch (InterruptedException e) {
+            System.err.println("[SETUP] Error: Hilo interrumpido durante sincronización");
+            e.printStackTrace();
+            Thread.currentThread().interrupt();
+        }
     }
 }

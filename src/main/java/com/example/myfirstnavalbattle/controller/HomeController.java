@@ -37,4 +37,14 @@ public class HomeController {
     private void handleCharacter() throws IOException {
         SceneManager.switchTo("CharacterScene");
     }
+
+    @FXML
+    private void handleSettings() throws IOException {
+        SceneManager.switchTo("GameStatisticsScene");
+    }
+
+    @FXML
+    private void handleChangeProfile() throws IOException {
+        // SceneManager.switchTo("ProfileScene");
+    }
 }

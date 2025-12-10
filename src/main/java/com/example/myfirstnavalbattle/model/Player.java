@@ -24,9 +24,9 @@ public class Player {
      * @param playerName the name of the user
      * @param setupCells the cells from the SetupController Class
      * @param setupShips the ships from the SetupController Class
-     * @param character the global character selected
+     * @param character  the global character selected
      */
-    public Player (String playerName, Cell[][] setupCells, ArrayList<Ship> setupShips, Characters character) {
+    public Player(String playerName, Cell[][] setupCells, ArrayList<Ship> setupShips, Characters character) {
         this.board = new Board(setupCells, setupShips);
         this.playerName = playerName;
         this.character = character;
@@ -38,12 +38,25 @@ public class Player {
      * Another constructor of the Player Class
      * Represents the IA
      */
-    public Player () {
+    public Player() {
         board = new Board();
         character = new Characters("DEFAULT");
         playerName = "IA";
         hasPlayed = false;
         hasLost = false;
+    }
+
+    /**
+     * Constructor for IA with pre-generated board (for threading)
+     * 
+     * @param aiBoard Board generado por el hilo de IA
+     */
+    public Player(Board aiBoard) {
+        this.board = aiBoard;
+        this.character = new Characters("DEFAULT");
+        this.playerName = "IA";
+        this.hasPlayed = false;
+        this.hasLost = false;
     }
 
     /**
@@ -57,22 +70,37 @@ public class Player {
      */
     public ModelCell.Status shoot(int row, int col) {
         ModelCell.Status status = board.shoot(row, col);
-        if (status == ModelCell.Status.MISS){
+        if (status == ModelCell.Status.MISS) {
             hasPlayed = true;
-        }
-        else if (status == ModelCell.Status.KILLED){
-            if (!board.stillShipsAlive()){
+        } else if (status == ModelCell.Status.KILLED) {
+            if (!board.stillShipsAlive()) {
                 hasLost = true;
             }
         }
         return status;
     }
 
-    public Board getBoard() { return board; }
-    public String getPlayerName() { return playerName; }
-    public Characters getCharacter() { return character; }
-    public boolean isHasPlayed() { return hasPlayed; }
-    public boolean isHasLost() { return hasLost; }
+    public Board getBoard() {
+        return board;
+    }
 
-    public void setHasPlayed(boolean hasPlayed) { this.hasPlayed = hasPlayed; }
+    public String getPlayerName() {
+        return playerName;
+    }
+
+    public Characters getCharacter() {
+        return character;
+    }
+
+    public boolean isHasPlayed() {
+        return hasPlayed;
+    }
+
+    public boolean isHasLost() {
+        return hasLost;
+    }
+
+    public void setHasPlayed(boolean hasPlayed) {
+        this.hasPlayed = hasPlayed;
+    }
 }

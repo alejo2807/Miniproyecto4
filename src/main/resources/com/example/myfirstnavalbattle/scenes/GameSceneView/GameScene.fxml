@@ -36,4 +36,7 @@
     <Label layoutX="920" layoutY="145" styleClass="Title" text="Jugador CPU">
     </Label>
 
+    <Label fx:id="labelShipDestroyed" layoutX="280" layoutY="700" styleClass="ship-notification" stylesheets="@GameSceneStyle.css" visible="false">
+    </Label>
+
 </AnchorPane>
