@@ -1,0 +1,19 @@
+.back-button {
+    -fx-font-family: "Open Sans Regular";
+    -fx-text-fill: white;
+    -fx-background-color: #545454;
+    -fx-text-alignment: center;
+    -fx-font-size: 18px;
+
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+    -fx-background-insets: 0;
+
+    -fx-pref-width: 240;
+    -fx-pref-height: 80;
+}
+
+.back-button:hover {
+    -fx-background-color: white;
+    -fx-text-fill: black;
+}

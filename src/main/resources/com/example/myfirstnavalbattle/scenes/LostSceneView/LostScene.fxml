@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="anchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="690.0" prefWidth="1366.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myfirstnavalbattle.controller.LostController">
+   <children>
+      <ImageView fitHeight="1080.0" fitWidth="1920.0" layoutX="-190.0" layoutY="-74.0" pickOnBounds="true">
+         <image>
+            <Image url="@../../Images/backgrounds/background.jpg" />
+         </image>
+      </ImageView>
+      <Rectangle height="1140.0" layoutX="785.0" opacity="0.7" styleClass="rectangles" width="465.0" />
+      <Label id="titleLabel" layoutX="874.0" layoutY="266.0" prefHeight="90.0" prefWidth="306.0" styleClass="title-label1" stylesheets="@VictoryAndLostStyle.css" text="Perdiste :(" textFill="WHITE">
+         <font>
+            <Font size="61.0" />
+         </font>
+      </Label>
+      <Label id="titleLabel" layoutX="791.0" layoutY="414.0" prefHeight="103.0" prefWidth="452.0" styleClass="title-label1" text="Presiona Esc para volver al menu inicial" textFill="WHITE">
+         <font>
+            <Font size="26.0" />
+         </font>
+      </Label>
+      <Label fx:id="labelStats" alignment="TOP_LEFT" layoutX="820.0" layoutY="520.0" prefHeight="200.0" prefWidth="400.0" styleClass="title-label1" stylesheets="@VictoryAndLostStyle.css" textFill="WHITE">
+         <font>
+            <Font name="Consolas" size="18.0" />
+         </font>
+      </Label>
+   </children>
+</AnchorPane>
