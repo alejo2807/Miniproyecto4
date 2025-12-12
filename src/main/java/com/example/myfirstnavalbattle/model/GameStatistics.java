@@ -117,8 +117,46 @@ public class GameStatistics {
      *
      * @return resumen de estadísticas
      */
+    // Estadísticas Globales (Persistentes para la sesión)
+    private static int totalGamesPlayed = 0;
+    private static int totalGamesWon = 0;
+    private static int totalGamesLost = 0;
+
+    /**
+     * Incrementa el contador de partidas jugadas
+     */
+    public void incrementTotalGamesPlayed() {
+        totalGamesPlayed++;
+    }
+
+    /**
+     * Incrementa el contador de partidas ganadas
+     */
+    public void incrementTotalGamesWon() {
+        totalGamesWon++;
+    }
+
+    /**
+     * Incrementa el contador de partidas perdidas
+     */
+    public void incrementTotalGamesLost() {
+        totalGamesLost++;
+    }
+
+    /**
+     * Genera un resumen de las estadísticas en formato String
+     * Incluye estadísticas globales y de la partida actual
+     *
+     * @return resumen de estadísticas
+     */
     public String getSummary() {
         StringBuilder sb = new StringBuilder();
+        sb.append("=== ESTADÍSTICAS GLOBALES ===\n");
+        sb.append("Partidas Jugadas: ").append(totalGamesPlayed).append("\n");
+        sb.append("Partidas Ganadas: ").append(totalGamesWon).append("\n");
+        sb.append("Partidas Perdidas: ").append(totalGamesLost).append("\n\n");
+
+        sb.append("=== ÚLTIMA PARTIDA ===\n");
         sb.append("Disparos Totales: ").append(getStat("disparosTotales")).append("\n");
         sb.append("Aciertos: ").append(getStat("aciertos")).append("\n");
         sb.append("Fallos: ").append(getStat("fallos")).append("\n");

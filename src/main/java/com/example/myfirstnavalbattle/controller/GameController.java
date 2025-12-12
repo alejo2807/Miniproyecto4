@@ -180,6 +180,7 @@ public class GameController {
         iaShipsImageView = new ArrayList<>();
         objetivosIA = new LinkedList<>(); // Inicializar cola de objetivos
         playerStats = GameStatisticsController.getGameStatistics(); // Obtener instancia compartida de estadísticas
+        playerStats.reset(); // Resetear para la nueva partida
         navesDestruidas = new Stack<>(); // Inicializar stack de naves destruidas
 
         initGridPane(gridPanePlayer, margins, size, 45);
@@ -517,12 +518,17 @@ public class GameController {
 
         // Mostrar ventana de victoria o derrota
         try {
+            // Actualizar estadísticas globales
+            playerStats.incrementTotalGamesPlayed();
+
             if (playerIA.isHasLost()) {
                 // El jugador humano ganó
+                playerStats.incrementTotalGamesWon();
                 System.out.println("[GAME] Jugador GANÓ - Cambiando a VictoryScene");
                 SceneManager.switchTo("VictoryScene");
             } else if (playerOne.isHasLost()) {
                 // El jugador humano perdió
+                playerStats.incrementTotalGamesLost();
                 System.out.println("[GAME] Jugador PERDIÓ - Cambiando a LostScene");
                 SceneManager.switchTo("LostScene");
             }
