@@ -6,6 +6,11 @@ import com.example.myfirstnavalbattle.model.GameStatistics;
 import com.example.myfirstnavalbattle.model.StatisticsDisplayAdapter;
 import com.example.myfirstnavalbattle.model.ModelCell;
 import com.example.myfirstnavalbattle.model.Player;
+import com.example.myfirstnavalbattle.model.dto.BoardState;
+import com.example.myfirstnavalbattle.model.dto.GameState;
+import com.example.myfirstnavalbattle.model.dto.ShipState;
+import com.example.myfirstnavalbattle.persistence.GameSaver;
+import com.example.myfirstnavalbattle.persistence.ProfileManager;
 import com.example.myfirstnavalbattle.view.SceneManager;
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
@@ -186,6 +191,46 @@ public class GameController {
         initGridPane(gridPanePlayer, margins, size, 45);
         initGridPane(gridPaneIA, margins, size, 45);
         initShips();
+        restoreVisuals();
+    }
+
+    private void restoreVisuals() {
+        restoreGridVisuals(playerOneBoard, stackPanesOfPlayer);
+        restoreGridVisuals(playerIABoard, stackPanesOfIA);
+    }
+
+    private void restoreGridVisuals(Board board, StackPane[][] panes) {
+        int size = SetupController.GRID_SIZE;
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                ModelCell cell = board.getCell(i, j);
+                // Evitar null pointer si panes no inicializados (aunque initialize lo hace
+                // antes)
+                if (panes[i][j] == null)
+                    continue;
+
+                // Aplicar estilos segun estado
+                if (cell.getStatus() == ModelCell.Status.MISS) {
+                    panes[i][j].getStyleClass().add("water");
+                } else if (cell.getStatus() == ModelCell.Status.HIT) {
+                    panes[i][j].getStyleClass().add("hit");
+                } else if (cell.getStatus() == ModelCell.Status.KILLED) {
+                    panes[i][j].getStyleClass().add("hit");
+                    panes[i][j].getStyleClass().add("killed");
+                }
+                // Si es HIT/KILLED, deshabilitar interaccion?
+                if (cell.getStatus() != ModelCell.Status.EMPTY && cell.getStatus() != ModelCell.Status.SHIP) {
+                    // Si ya fue disparado, deshabilitar si es tablero enemigo (IA)
+                    // O player board?
+                    // Logica original: stackPane.setDisable(true) al hacer click
+                    // Debemos replicarlo
+                    if (panes == stackPanesOfIA) {
+                        // Solo deshabilitar si ya disparamos (MISS/HIT/KILLED)
+                        panes[i][j].setDisable(true);
+                    }
+                }
+            }
+        }
     }
 
     private void initGridPane(GridPane gridPane, int margins, int size, int stackSize) {
@@ -532,10 +577,135 @@ public class GameController {
                 System.out.println("[GAME] Jugador PERDIÓ - Cambiando a LostScene");
                 SceneManager.switchTo("LostScene");
             }
+
+            // GUARDAR DATOS EN CSV
+            saveProfileStats();
+
         } catch (IOException e) {
             System.err.println("Error al cargar la escena de fin de juego: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void saveProfileStats() {
+        ProfileManager manager = new ProfileManager();
+        String name = playerStats.getCurrentProfileName();
+        // Recalcular stats totales leyendo del CSV o asumiendo que playerStats tiene
+        // los globales correctos
+        // Nota: playerStats tiene contadores de sesión estáticos.
+        // Lo ideal sería leer del manager, actualizar y guardar.
+        // Por simplicidad, usaremos los contadores globales de GameStatistics
+        // Sin embargo, GameStatistics los resetea? No, son estáticos.
+        // Pero para ser robustos, leemos el perfil actual del manager
+
+        ProfileManager.Profile profile = manager.getProfile(name);
+        int played = profile.getPlayed() + 1;
+        int won = profile.getWon() + (playerIA.isHasLost() ? 1 : 0);
+        int lost = profile.getLost() + (playerOne.isHasLost() ? 1 : 0);
+
+        String shipStatus = generateShipStatusSummary();
+
+        manager.saveOrUpdateProfile(name, played, won, lost, shipStatus);
+    }
+
+    private String generateShipStatusSummary() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        // Iterar barcos del jugador
+        for (Ship ship : playerShips) {
+            String status = "Intacto";
+            // Calcular salud. Ship no tiene 'health' directo visible aqui facil,
+            // pero podemos verificar las celdas o el estado
+            // O mejor, revisar si está 'KILLED' o si alguna parte está 'HIT'
+
+            // Metodo alternativo: verificar modelo
+            boolean isSunk = !isShipAlive(ship, playerOneBoard);
+            if (isSunk) {
+                status = "Hundido";
+            } else if (isShipHit(ship, playerOneBoard)) {
+                status = "Golpeado";
+            }
+
+            sb.append("Tam").append(ship.getSize()).append(":").append(status).append("|");
+        }
+        if (sb.length() > 1)
+            sb.setLength(sb.length() - 1); // Remove last |
+        sb.append("]");
+        return sb.toString();
+    }
+
+    // Helper para verificar estado desde el board
+    private boolean isShipAlive(Ship ship, Board board) {
+        // Aprovechar logica existente en Board, o replicar
+        // Board tiene isShipAlive pero es privado.
+        // Accedemos a traves de ModelCell
+        int[] coords = (int[]) ship.getUserData();
+        return checkShipHealth(board, coords[0], coords[1], ship.getSize(), ship.isVertical()) > 0;
+    }
+
+    private boolean isShipHit(Ship ship, Board board) {
+        int[] coords = (int[]) ship.getUserData();
+        int health = checkShipHealth(board, coords[0], coords[1], ship.getSize(), ship.isVertical());
+        return health < ship.getSize(); // Si salud < tamaño, fue golpeado
+    }
+
+    private int checkShipHealth(Board board, int row, int col, int size, boolean vertical) {
+        int health = 0;
+        int init = vertical ? row : col;
+        for (int i = 0; i < size; i++) {
+            int r = vertical ? init + i : row;
+            int c = vertical ? col : init + i;
+            ModelCell cell = board.getCell(r, c);
+            if (cell.getStatus() == ModelCell.Status.SHIP) {
+                health++;
+            }
+        }
+        return health;
+    }
+
+    private void saveGameState() {
+        // Crear DTOs
+        BoardState pBoard = createBoardState(playerOneBoard);
+        BoardState iaBoard = createBoardState(playerIABoard);
+
+        GameState state = new GameState(
+                playerStats.getCurrentProfileName(),
+                pBoard,
+                iaBoard,
+                playerOne.isHasPlayed(), // Si playerOne 'isHasPlayed', significa que YA jugó su turno, le toca a la IA?
+                // Revisa logica nextTurn: si isHasPlayed false -> setTrue -> IA turn.
+                // Si guardamos, guardamos el estado actual.
+                turnCounter);
+
+        GameSaver.saveGame(state, playerStats.getCurrentProfileName());
+    }
+
+    private BoardState createBoardState(Board board) {
+        // Necesitamos tamaño. Asumimos 10
+        BoardState bs = new BoardState(10);
+
+        // Copiar celdas
+        ModelCell.Status[][] statuses = new ModelCell.Status[10][10];
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                statuses[i][j] = board.getCell(i, j).getStatus();
+            }
+        }
+        bs.setCellStatuses(statuses);
+
+        // Copiar barcos
+        for (Ship s : board.getShips()) {
+            int[] coords = (int[]) s.getUserData();
+            // Calcular salud actual para el estado
+            int health = checkShipHealth(board, coords[0], coords[1], s.getSize(), s.isVertical());
+
+            bs.addShip(new ShipState(
+                    coords[0], coords[1],
+                    s.getSize(),
+                    s.isVertical(),
+                    health));
+        }
+        return bs;
     }
 
     /**
@@ -577,6 +747,7 @@ public class GameController {
 
     @FXML
     private void handleBackButton() throws IOException {
+        saveGameState(); // Guardar antes de salir
         SceneManager.switchTo("HomeScene");
     }
 }

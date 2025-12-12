@@ -16,6 +16,17 @@ public class GameStatistics {
     // Estructura de datos: HashMap para almacenar métricas del jugador
     private HashMap<String, Integer> stats;
 
+    // Perfil actual cargado
+    private String currentProfileName = "Guest";
+
+    public void setCurrentProfileName(String name) {
+        this.currentProfileName = name;
+    }
+
+    public String getCurrentProfileName() {
+        return currentProfileName;
+    }
+
     /**
      * Constructor privado para patrón Singleton
      */
@@ -134,6 +145,33 @@ public class GameStatistics {
      */
     public void incrementTotalGamesWon() {
         totalGamesWon++;
+    }
+
+    /**
+     * Establece el contador de partidas jugadas
+     * 
+     * @param count cantidad
+     */
+    public void setTotalGamesPlayed(int count) {
+        totalGamesPlayed = count;
+    }
+
+    /**
+     * Establece el contador de partidas ganadas
+     * 
+     * @param count cantidad
+     */
+    public void setTotalGamesWon(int count) {
+        totalGamesWon = count;
+    }
+
+    /**
+     * Establece el contador de partidas perdidas
+     * 
+     * @param count cantidad
+     */
+    public void setTotalGamesLost(int count) {
+        totalGamesLost = count;
     }
 
     /**

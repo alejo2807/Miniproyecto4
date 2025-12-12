@@ -60,6 +60,17 @@ public class Player {
     }
 
     /**
+     * Constructor for Resuming a Game
+     */
+    public Player(String name, Board board) {
+        this.board = board;
+        this.playerName = name;
+        this.character = new Characters("DEFAULT"); // Could be saved in state if needed
+        this.hasPlayed = false;
+        this.hasLost = false;
+    }
+
+    /**
      * Makes a shot at the board in the specific coordinates.
      * Update the hasLost boolean based on whether any ships alive.
      * Returns the {@link ModelCell.Status} indicating the result of the shot.

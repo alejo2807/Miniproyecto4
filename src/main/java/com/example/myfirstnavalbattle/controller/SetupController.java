@@ -8,6 +8,7 @@ import com.example.myfirstnavalbattle.model.Player;
 import com.example.myfirstnavalbattle.model.SelectCharacter;
 import com.example.myfirstnavalbattle.view.AnimationsManager;
 import com.example.myfirstnavalbattle.view.SceneManager;
+import com.example.myfirstnavalbattle.model.GameStatistics;
 import javafx.fxml.FXML;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
@@ -317,6 +318,14 @@ public class SetupController {
             rectangle.setY(-100);
             rectangle.setWidth(510);
             rectangle.setHeight(600);
+
+            // Auto-detect User
+            String currentProfile = GameStatistics.getInstance().getCurrentProfileName();
+            if (!currentProfile.equals("Guest")) {
+                userNameTextField.setText(currentProfile);
+                userNameTextField.setDisable(true); // Lock it
+                readyButton.setDisable(false); // Enable Ready immediately
+            }
         } else {
             characterImage.setVisible(false);
             readyButton.setVisible(false);

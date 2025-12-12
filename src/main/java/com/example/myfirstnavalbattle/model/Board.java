@@ -30,6 +30,61 @@ public class Board {
         initBoard(setupCells, setupShips);
     }
 
+    /**
+     * Reconstructs Board from saved state
+     */
+    public Board(com.example.myfirstnavalbattle.model.dto.BoardState state) {
+        size = SetupController.GRID_SIZE;
+        cells = new ModelCell[size][size];
+        ships = new ArrayList<>();
+
+        // Restore ships first to link them to cells
+        for (com.example.myfirstnavalbattle.model.dto.ShipState ss : state.getShips()) {
+            Ship ship = new Ship(ss.getSize());
+            if (ship.isVertical() != ss.isVertical()) {
+                ship.rotateShip();
+            }
+            ship.setUserData(new int[] { ss.getX(), ss.getY() });
+            ships.add(ship);
+        }
+
+        // Restore cells. Note: We need to link cells to ships if status is
+        // SHIP/HIT/KILLED
+        // But ModelCell stores the Ship object.
+        // So we iterate cells, set status. If status implies a ship, we find which ship
+        // covers this cell.
+
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                ModelCell.Status status = state.getCellStatuses()[i][j];
+                ModelCell cell = new ModelCell();
+                cell.setStatus(status);
+
+                if (status == ModelCell.Status.SHIP || status == ModelCell.Status.HIT
+                        || status == ModelCell.Status.KILLED) {
+                    for (Ship s : ships) {
+                        if (isPointInShip(i, j, s)) {
+                            cell.setShip(s);
+                            break;
+                        }
+                    }
+                }
+                cells[i][j] = cell;
+            }
+        }
+    }
+
+    private boolean isPointInShip(int r, int c, Ship s) {
+        int[] coords = (int[]) s.getUserData();
+        int sr = coords[0];
+        int sc = coords[1];
+        if (s.isVertical()) {
+            return c == sc && r >= sr && r < sr + s.getSize();
+        } else {
+            return r == sr && c >= sc && c < sc + s.getSize();
+        }
+    }
+
     private void initBoard(Cell[][] setupCellsArray, ArrayList<Ship> setupShips) {
         for (int row = 0; row < size; row++) {
             for (int col = 0; col < size; col++) {
@@ -67,13 +122,13 @@ public class Board {
 
             while (true) {
                 boolean vertical = Math.random() < 0.5;
-                int row = (int)(Math.random() * 10);
-                int col = (int)(Math.random() * 10);
+                int row = (int) (Math.random() * 10);
+                int col = (int) (Math.random() * 10);
                 if (canBePlaceRandom(row, col, vertical, size)) {
                     if (ship.isVertical() != vertical) {
                         ship.rotateShip();
                     }
-                    ship.setUserData( new int[] {row, col} );
+                    ship.setUserData(new int[] { row, col });
                     setModelCellsState(ship, ModelCell.Status.SHIP);
                     break;
                 }
@@ -87,14 +142,17 @@ public class Board {
 
             ModelCell cell;
             if (vertical) {
-                cell = getCell(target,col);
-            }
-            else {
-                cell = getCell(row,target);
+                cell = getCell(target, col);
+            } else {
+                cell = getCell(row, target);
             }
 
-            if (cell == null) { return false; }
-            if (cell.getStatus() == ModelCell.Status.SHIP) { return false; }
+            if (cell == null) {
+                return false;
+            }
+            if (cell.getStatus() == ModelCell.Status.SHIP) {
+                return false;
+            }
         }
         return true;
     }
@@ -108,17 +166,15 @@ public class Board {
         boolean vertical = targetShip.isVertical();
         int size = targetShip.getSize();
 
-
-        int init = vertical? shipRow : shipCol; // variable que ira iterando el for.
+        int init = vertical ? shipRow : shipCol; // variable que ira iterando el for.
 
         for (int target = init; target < init + size; target++) {
 
             ModelCell cell;
             if (vertical) {
-                cell = getCell(target, shipCol); //iteras el row
-            }
-            else{
-                cell = getCell(shipRow, target); //iteras el col
+                cell = getCell(target, shipCol); // iteras el row
+            } else {
+                cell = getCell(shipRow, target); // iteras el col
             }
             assert cell != null;
             cell.setStatus(status);
@@ -136,15 +192,23 @@ public class Board {
         if (cell.getStatus() == ModelCell.Status.EMPTY) {
             cell.setStatus(ModelCell.Status.MISS);
             return ModelCell.Status.MISS;
-        }
-        else{
-            cell.setStatus(ModelCell.Status.HIT);
+        } else if (cell.getStatus() == ModelCell.Status.MISS) {
+            return ModelCell.Status.MISS;
+        } else {
+            // It is SHIP, HIT or KILLED
             Ship targetShip = cell.getShip();
 
-            if(isShipAlive(targetShip)) {
-                return ModelCell.Status.HIT;
+            // Safety check: if ship is null (shouldn't happen for SHIP status, but safe for
+            // stability)
+            if (targetShip == null) {
+                return cell.getStatus();
             }
-            else{
+
+            cell.setStatus(ModelCell.Status.HIT);
+
+            if (isShipAlive(targetShip)) {
+                return ModelCell.Status.HIT;
+            } else {
                 setModelCellsState(targetShip, ModelCell.Status.KILLED);
                 return ModelCell.Status.KILLED;
             }
@@ -158,15 +222,14 @@ public class Board {
         boolean vertical = targetShip.isVertical();
         int size = targetShip.getSize();
 
-        int init = vertical? shipRow : shipCol;
+        int init = vertical ? shipRow : shipCol;
 
         for (int target = init; target < init + size; target++) {
 
             ModelCell cell;
             if (vertical) {
                 cell = getCell(target, shipCol);
-            }
-            else{
+            } else {
                 cell = getCell(shipRow, target);
             }
             assert cell != null;
@@ -178,9 +241,9 @@ public class Board {
         return false;
     }
 
-    public boolean stillShipsAlive(){
+    public boolean stillShipsAlive() {
         for (Ship ship : ships) {
-            if(isShipAlive(ship)){
+            if (isShipAlive(ship)) {
                 return true;
             }
         }
