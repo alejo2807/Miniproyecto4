@@ -8,6 +8,12 @@ import javafx.scene.image.Image;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.scene.control.Button;
+import com.example.myfirstnavalbattle.model.GameStatistics;
+import com.example.myfirstnavalbattle.model.Player;
+import com.example.myfirstnavalbattle.model.dto.GameState;
+import com.example.myfirstnavalbattle.persistence.GameSaver;
+import com.example.myfirstnavalbattle.model.Board;
+import javafx.scene.control.Alert;
 import java.io.IOException;
 
 public class HomeController {
@@ -31,8 +37,42 @@ public class HomeController {
     }
 
     @FXML
-    private void handleContinue() {
-        System.out.println("Continue");
+    private void handleContinue() throws IOException {
+        String currentPlayer = GameStatistics.getInstance().getCurrentProfileName();
+        if (GameSaver.hasSavedGame(currentPlayer)) {
+            GameState state = GameSaver.loadGame(currentPlayer);
+            if (state != null) {
+                // Reconstruct Players
+                Board pBoard = new Board(state.getPlayerBoard());
+                Board iaBoard = new Board(state.getIaBoard());
+
+                Player p1 = new Player(state.getPlayerName(), pBoard);
+                Player ia = new Player(iaBoard); // Uses the constructor we added, assumes IA name
+
+                // Restore turn/played state logic if needed, but handled by
+                // turnCounter/nextTurn usually?
+                // GameState has 'isPlayerTurn'. We might need to set it in GameController?
+                // GameController uses local 'TurnInfo' and 'turnCounter'.
+                // We should pass 'turnCounter' too? GameController static? No.
+                // For now, simple restoration.
+
+                GameController.setPlayerOne(p1);
+                GameController.setPlayerIA(ia);
+
+                SceneManager.switchTo("GameScene");
+            } else {
+                showError("Error", "No se pudo cargar la partida guardada.");
+            }
+        } else {
+            showError("Información", "No tienes partidas guardadas para el perfil: " + currentPlayer);
+        }
+    }
+
+    private void showError(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setContentText(content);
+        alert.show();
     }
 
     @FXML
@@ -47,6 +87,6 @@ public class HomeController {
 
     @FXML
     private void handleChangeProfile() throws IOException {
-        // SceneManager.switchTo("ProfileScene");
+        SceneManager.switchTo("AccountSelection");
     }
 }

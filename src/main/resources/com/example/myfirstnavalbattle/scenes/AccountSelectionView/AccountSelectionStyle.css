@@ -1,0 +1,81 @@
+.root {
+    -fx-background-color: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+}
+
+.title-label {
+    -fx-font-family: "Impact";
+    -fx-font-size: 40px;
+    -fx-text-fill: white;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.8), 10, 0, 0, 5);
+}
+
+.list-view {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: #4facfe;
+    -fx-border-width: 2;
+}
+
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-padding: 10 20;
+}
+
+.list-cell:filled:selected:focused,
+.list-cell:filled:selected {
+    -fx-background-color: #00f260;
+    -fx-text-fill: black;
+}
+
+.list-cell:even {
+    -fx-background-color: rgba(0, 0, 0, 0.1);
+}
+
+.action-button {
+    -fx-background-color: #4facfe;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+.action-button:hover {
+    -fx-background-color: #00f260;
+    -fx-text-fill: black;
+}
+
+.delete-button {
+    -fx-background-color: #ff5f6d;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+.delete-button:hover {
+    -fx-background-color: #c0392b;
+}
+
+.back-button {
+    -fx-background-color: transparent;
+    -fx-border-color: white;
+    -fx-border-radius: 20;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+.back-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+}
+
+.text-field {
+    -fx-background-color: rgba(255, 255, 255, 0.8);
+    -fx-font-size: 14px;
+    -fx-background-radius: 5;
+}

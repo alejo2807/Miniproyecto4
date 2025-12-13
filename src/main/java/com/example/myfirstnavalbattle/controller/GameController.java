@@ -6,6 +6,11 @@ import com.example.myfirstnavalbattle.model.GameStatistics;
 import com.example.myfirstnavalbattle.model.StatisticsDisplayAdapter;
 import com.example.myfirstnavalbattle.model.ModelCell;
 import com.example.myfirstnavalbattle.model.Player;
+import com.example.myfirstnavalbattle.model.dto.BoardState;
+import com.example.myfirstnavalbattle.model.dto.GameState;
+import com.example.myfirstnavalbattle.model.dto.ShipState;
+import com.example.myfirstnavalbattle.persistence.GameSaver;
+import com.example.myfirstnavalbattle.persistence.ProfileManager;
 import com.example.myfirstnavalbattle.view.SceneManager;
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
@@ -186,6 +191,54 @@ public class GameController {
         initGridPane(gridPanePlayer, margins, size, 45);
         initGridPane(gridPaneIA, margins, size, 45);
         initShips();
+        restoreVisuals();
+    }
+
+    private void restoreVisuals() {
+        restoreGridVisuals(playerOneBoard, stackPanesOfPlayer);
+        restoreGridVisuals(playerIABoard, stackPanesOfIA);
+
+        // FIX: Restore visibility of destroyed enemy ships
+        for (Ship ship : iaShips) {
+            if (!isShipAlive(ship, playerIABoard)) {
+                int[] coords = (int[]) ship.getUserData();
+                setImageVisibility(coords[0], coords[1]);
+            }
+        }
+    }
+
+    private void restoreGridVisuals(Board board, StackPane[][] panes) {
+        int size = SetupController.GRID_SIZE;
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                ModelCell cell = board.getCell(i, j);
+                // Evitar null pointer si panes no inicializados (aunque initialize lo hace
+                // antes)
+                if (panes[i][j] == null)
+                    continue;
+
+                // Aplicar estilos segun estado
+                if (cell.getStatus() == ModelCell.Status.MISS) {
+                    panes[i][j].getStyleClass().add("water");
+                } else if (cell.getStatus() == ModelCell.Status.HIT) {
+                    panes[i][j].getStyleClass().add("hit");
+                } else if (cell.getStatus() == ModelCell.Status.KILLED) {
+                    panes[i][j].getStyleClass().add("hit");
+                    panes[i][j].getStyleClass().add("killed");
+                }
+                // Si es HIT/KILLED, deshabilitar interaccion?
+                if (cell.getStatus() != ModelCell.Status.EMPTY && cell.getStatus() != ModelCell.Status.SHIP) {
+                    // Si ya fue disparado, deshabilitar si es tablero enemigo (IA)
+                    // O player board?
+                    // Logica original: stackPane.setDisable(true) al hacer click
+                    // Debemos replicarlo
+                    if (panes == stackPanesOfIA) {
+                        // Solo deshabilitar si ya disparamos (MISS/HIT/KILLED)
+                        panes[i][j].setDisable(true);
+                    }
+                }
+            }
+        }
     }
 
     private void initGridPane(GridPane gridPane, int margins, int size, int stackSize) {
@@ -532,10 +585,238 @@ public class GameController {
                 System.out.println("[GAME] Jugador PERDIÓ - Cambiando a LostScene");
                 SceneManager.switchTo("LostScene");
             }
+
+            // GUARDAR DATOS EN CSV
+            saveProfileStats();
+
         } catch (IOException e) {
             System.err.println("Error al cargar la escena de fin de juego: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void saveProfileStats() {
+        ProfileManager manager = new ProfileManager();
+        String name = playerStats.getCurrentProfileName();
+
+        // FIX: Use the global counters from GameStatistics which are already updated in
+        // finishGame
+        // GameStatistics.incrementTotalGames... are called before this method.
+        // We get total games from the GameStatistics singleton which is the source of
+        // truth for the session.
+        // However, GameStatistics needs to expose getters for these static totals if
+        // they are private static.
+        // Looking at GameStatistics, they seem private static but have
+        // setters/incrementers.
+        // We need to check if there are getters. If not, we might need to modify
+        // GameStatistics or assume
+        // that we should use the ProfileManager to read -> add -> save, BUT
+        // GameStatistics ALREADY increments them?
+        // Let's check finishGame:
+        // playerStats.incrementTotalGamesPlayed();
+
+        // So playerStats (singleton) holds the updated values IF they are exposed.
+        // Looking at the file view of GameStatistics.java earlier:
+        // It has NO getters for totalGamesPlayed/Won/Lost. It only has setters and
+        // incrementers.
+        // This is a design flaw in GameStatistics.
+        // HOWEVER, AccountSelectionController sets them into GameStatistics on load:
+        // gs.setTotalGamesPlayed(p.getPlayed());
+
+        // So GameStatistics "Should" have the correct total count.
+        // Since we cannot get them directly from GameStatistics (unless we add getters,
+        // which we should),
+        // we will READ from file, ADD 1 (since we just finished a game), and SAVE.
+        // THIS MATCHES the logic: `int played = profile.getPlayed() + 1;`
+
+        // Wait, if we use the old logic:
+        // int played = profile.getPlayed() + 1;
+        // This is correct because we just finished ONE game.
+        // The issue 'Stats don't save correctly' implies they might be overwritten or
+        // desynced.
+        // If we opened the app, AccountSelection loaded stats into GameStats.
+        // We play. GameStats increments its internal counters.
+        // We save using ProfileManager reading from disk + 1.
+        // This seems redundant but correct IF disk and GameStats were in sync.
+
+        // PROBLEM: If I play 2 games in a row without restarting?
+        // Game 1: Disk=10. GameStats=10. Play. GameStats=11. Save: Read(10)+1 = 11.
+        // Write 11. CORRECT.
+        // Game 2: Disk=11. GameStats=11. Play. GameStats=12. Save: Read(11)+1 = 12.
+        // Write 12. CORRECT.
+
+        // SO WHY did the user say "Las estadisticas no se guardan correctamente"?
+        // Maybe "Si cierro el programa, lo abro e ingreso con un perfil registrado, que
+        // cargue correctamente sus stats."
+        // implies they weren't loading?
+        // In AccountSelectionController:
+        // GameStatistics.getInstance().setCurrentProfileName(selected);
+        // ProfileManager.Profile p = ...
+        // gs.setTotalGamesPlayed(p.getPlayed());
+        // This looks correct.
+
+        // Maybe the issue is simpler: GameStatistics has these fields as `static`.
+        // `private static int totalGamesPlayed = 0;`
+        // If I switch user, do they reset?
+        // AccountSelectionController calls:
+        // gs.setTotalGamesPlayed(p.getPlayed()); (Update: yes it sets them).
+
+        // BUT `GameStatistics.reset()` is called in `GameController.initialize()`:
+        // `playerStats.reset();`
+        // Let's check `reset()` in GameStatistics.
+        // public void reset() { initializeStats(); } -> resets "disparosTotales",
+        // "aciertos" etc.
+        // It does NOT reset totalGamesPlayed.
+
+        // WAIT.
+        // `finishGame` calls `playerStats.incrementTotalGamesPlayed()`.
+        // AND `saveProfileStats` calls `manager.saveOrUpdateProfile(...,
+        // profile.getPlayed() + 1, ...)`
+        // These are independent.
+        // PROPOSAL: To be absolutely safe and consistent, we should use the values from
+        // GameStatistics
+        // because that tracks the *memory* state. But since GameStatistics has no
+        // getters for totals,
+        // I will add them to GameStatistics.java first, then use them here.
+
+        // Start by fixing GameStatistics.java to have getters. (I will do this in the
+        // next tool call if needed,
+        // but I can't do it in this multi_replace strictly to GameStatistics if I'm
+        // editing GameController).
+        // Actually I can edit both.
+
+        // For now, I'll assume I'll add the getters `getTotalGamesPlayed`, etc. to
+        // GameStatistics.
+
+        // int played = playerStats.getTotalGamesPlayed();
+        // int won = playerStats.getTotalGamesWon();
+        // int lost = playerStats.getTotalGamesLost();
+
+        // This ensures what we have in memory (which drives the UI, presumably) is what
+        // we save.
+
+        // Wait, GameController.finishGame increments them right before calling
+        // saveProfileStats.
+        // "playerStats.incrementTotalGamesPlayed();"
+
+        // So checking GameStatistics is the most robust way.
+        // I will act on GameStatistics.java first or simultaneously.
+
+        // Since I cannot call a method that doesn't exist yet, I will use the
+        // `multi_replace` to add getters to GameStatistics.java
+        // AND update GameController.java to use them.
+
+        // But wait, the previous code in saveProfileStats was:
+        // ProfileManager.Profile profile = manager.getProfile(name);
+        // int played = profile.getPlayed() + 1;
+
+        // If I trust GameStatistics, I don't need to read the profile from disk again.
+
+        manager.saveOrUpdateProfile(name,
+                playerStats.getTotalGamesPlayed(),
+                playerStats.getTotalGamesWon(),
+                playerStats.getTotalGamesLost(),
+                generateShipStatusSummary());
+    }
+
+    private String generateShipStatusSummary() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        // Iterar barcos del jugador
+        for (Ship ship : playerShips) {
+            String status = "Intacto";
+            // Calcular salud. Ship no tiene 'health' directo visible aqui facil,
+            // pero podemos verificar las celdas o el estado
+            // O mejor, revisar si está 'KILLED' o si alguna parte está 'HIT'
+
+            // Metodo alternativo: verificar modelo
+            boolean isSunk = !isShipAlive(ship, playerOneBoard);
+            if (isSunk) {
+                status = "Hundido";
+            } else if (isShipHit(ship, playerOneBoard)) {
+                status = "Golpeado";
+            }
+
+            sb.append("Tam").append(ship.getSize()).append(":").append(status).append("|");
+        }
+        if (sb.length() > 1)
+            sb.setLength(sb.length() - 1); // Remove last |
+        sb.append("]");
+        return sb.toString();
+    }
+
+    // Helper para verificar estado desde el board
+    private boolean isShipAlive(Ship ship, Board board) {
+        // Aprovechar logica existente en Board, o replicar
+        // Board tiene isShipAlive pero es privado.
+        // Accedemos a traves de ModelCell
+        int[] coords = (int[]) ship.getUserData();
+        return checkShipHealth(board, coords[0], coords[1], ship.getSize(), ship.isVertical()) > 0;
+    }
+
+    private boolean isShipHit(Ship ship, Board board) {
+        int[] coords = (int[]) ship.getUserData();
+        int health = checkShipHealth(board, coords[0], coords[1], ship.getSize(), ship.isVertical());
+        return health < ship.getSize(); // Si salud < tamaño, fue golpeado
+    }
+
+    private int checkShipHealth(Board board, int row, int col, int size, boolean vertical) {
+        int health = 0;
+        int init = vertical ? row : col;
+        for (int i = 0; i < size; i++) {
+            int r = vertical ? init + i : row;
+            int c = vertical ? col : init + i;
+            ModelCell cell = board.getCell(r, c);
+            if (cell.getStatus() == ModelCell.Status.SHIP) {
+                health++;
+            }
+        }
+        return health;
+    }
+
+    private void saveGameState() {
+        // Crear DTOs
+        BoardState pBoard = createBoardState(playerOneBoard);
+        BoardState iaBoard = createBoardState(playerIABoard);
+
+        GameState state = new GameState(
+                playerStats.getCurrentProfileName(),
+                pBoard,
+                iaBoard,
+                playerOne.isHasPlayed(), // Si playerOne 'isHasPlayed', significa que YA jugó su turno, le toca a la IA?
+                // Revisa logica nextTurn: si isHasPlayed false -> setTrue -> IA turn.
+                // Si guardamos, guardamos el estado actual.
+                turnCounter);
+
+        GameSaver.saveGame(state, playerStats.getCurrentProfileName());
+    }
+
+    private BoardState createBoardState(Board board) {
+        // Necesitamos tamaño. Asumimos 10
+        BoardState bs = new BoardState(10);
+
+        // Copiar celdas
+        ModelCell.Status[][] statuses = new ModelCell.Status[10][10];
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                statuses[i][j] = board.getCell(i, j).getStatus();
+            }
+        }
+        bs.setCellStatuses(statuses);
+
+        // Copiar barcos
+        for (Ship s : board.getShips()) {
+            int[] coords = (int[]) s.getUserData();
+            // Calcular salud actual para el estado
+            int health = checkShipHealth(board, coords[0], coords[1], s.getSize(), s.isVertical());
+
+            bs.addShip(new ShipState(
+                    coords[0], coords[1],
+                    s.getSize(),
+                    s.isVertical(),
+                    health));
+        }
+        return bs;
     }
 
     /**
@@ -577,6 +858,7 @@ public class GameController {
 
     @FXML
     private void handleBackButton() throws IOException {
+        saveGameState(); // Guardar antes de salir
         SceneManager.switchTo("HomeScene");
     }
 }
