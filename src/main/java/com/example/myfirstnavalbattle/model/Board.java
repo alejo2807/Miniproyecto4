@@ -119,11 +119,19 @@ public class Board {
     private void generateRandomBoard() {
         for (Ship ship : ships) {
             int size = ship.getSize();
+            int attempts = 0;
 
-            while (true) {
+            while (attempts < 100) { // Limit attempts to avoid infinite loops
                 boolean vertical = Math.random() < 0.5;
-                int row = (int) (Math.random() * 10);
-                int col = (int) (Math.random() * 10);
+
+                // FIX: Adjust bounds based on size to avoid OutOfBounds exception
+                int maxRow = vertical ? (10 - size) : 9;
+                int maxCol = vertical ? 9 : (10 - size);
+
+                // Add 1 to range because Math.random() * N is [0, N)
+                int row = (int) (Math.random() * (maxRow + 1));
+                int col = (int) (Math.random() * (maxCol + 1));
+
                 if (canBePlaceRandom(row, col, vertical, size)) {
                     if (ship.isVertical() != vertical) {
                         ship.rotateShip();
@@ -132,6 +140,7 @@ public class Board {
                     setModelCellsState(ship, ModelCell.Status.SHIP);
                     break;
                 }
+                attempts++;
             }
         }
     }

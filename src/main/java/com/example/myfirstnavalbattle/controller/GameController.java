@@ -383,7 +383,10 @@ public class GameController {
             stackPane.getStyleClass().add("hit");
             if (playerIsIA) {
                 agregarObjetivosAdyacentes(row, col); // Agregar celdas vecinas a la cola
-                randomShoot();
+                // FIX: Add delay before next shot
+                PauseTransition pause = new PauseTransition(Duration.seconds(2));
+                pause.setOnFinished(e -> randomShoot());
+                pause.play();
             }
         } else if (status == ModelCell.Status.KILLED) {
             Ship targetShip = board.getShip(row, col);
@@ -405,7 +408,10 @@ public class GameController {
                 else
                     System.out.println("playerIA has lost");
             } else if (playerIsIA) {
-                randomShoot();
+                // FIX: Add delay before next shot
+                PauseTransition pause = new PauseTransition(Duration.seconds(2));
+                pause.setOnFinished(e -> randomShoot());
+                pause.play();
             }
         }
     }
@@ -507,11 +513,13 @@ public class GameController {
             playerOne.setHasPlayed(true);
             playerIA.setHasPlayed(false);
 
-            // Uso de la clase interna TurnInfo
             TurnInfo turnInfo = new TurnInfo(false, ++turnCounter);
             System.out.println(turnInfo.getSummary());
 
-            randomShoot();
+            // FIX: Add delay before first AI shot of the turn
+            PauseTransition pause = new PauseTransition(Duration.seconds(2));
+            pause.setOnFinished(e -> randomShoot());
+            pause.play();
         } else {
             playerOne.setHasPlayed(false);
             playerIA.setHasPlayed(true);
