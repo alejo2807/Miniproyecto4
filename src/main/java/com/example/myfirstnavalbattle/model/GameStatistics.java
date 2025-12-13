@@ -86,6 +86,21 @@ public class GameStatistics {
     }
 
     /**
+     * Establece las estadísticas manualmente (útil para cargar partida guardada)
+     * 
+     * @param shots  disparos totales
+     * @param hits   aciertos
+     * @param misses fallos
+     * @param sunk   barcos hundidos
+     */
+    public void setStats(int shots, int hits, int misses, int sunk) {
+        stats.put("disparosTotales", shots);
+        stats.put("aciertos", hits);
+        stats.put("fallos", misses);
+        stats.put("barcosHundidos", sunk);
+    }
+
+    /**
      * Obtiene el valor de una estadística específica
      *
      * @param statName nombre de la estadística

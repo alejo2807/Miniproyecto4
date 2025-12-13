@@ -50,11 +50,20 @@ public class GameController {
     Label labelName;
     @FXML
     private Label labelShipDestroyed;
+    @FXML
+    private Label labelTimer;
 
     private static Player playerOne;
     private static Player playerIA;
     private Board playerOneBoard;
     private Board playerIABoard;
+
+    // Estado pendiente para cargar partida (setted by HomeController)
+    private static GameState pendingLoadState = null;
+
+    public static void setPendingLoadState(GameState state) {
+        pendingLoadState = state;
+    }
 
     private ArrayList<Ship> playerShips = null;
     private ArrayList<Ship> iaShips = null;
@@ -75,6 +84,9 @@ public class GameController {
 
     // Timer para ocultar la notificación de barco hundido
     private PauseTransition hideNotification;
+
+    // Hilo del temporizador
+    private com.example.myfirstnavalbattle.model.GameTimerThread gameTimer;
 
     /**
      * Clase interna para encapsular información del turno actual.
@@ -185,13 +197,37 @@ public class GameController {
         iaShipsImageView = new ArrayList<>();
         objetivosIA = new LinkedList<>(); // Inicializar cola de objetivos
         playerStats = GameStatisticsController.getGameStatistics(); // Obtener instancia compartida de estadísticas
-        playerStats.reset(); // Resetear para la nueva partida
+        playerStats = GameStatisticsController.getGameStatistics(); // Obtener instancia compartida de estadísticas
+
+        // Cargar estadísticas si hay una partida pendiente
+        if (pendingLoadState != null) {
+            System.out.println("[GAME] Resumiendo partida - Restaurando estadísticas...");
+            playerStats.setStats(
+                    pendingLoadState.getShotsFired(),
+                    pendingLoadState.getHits(),
+                    pendingLoadState.getMisses(),
+                    pendingLoadState.getShipsSunk());
+            // Restaurar turno si es necesario
+            turnCounter = pendingLoadState.getTurnCounter();
+
+            // Limpiar estado pendiente para futuras partidas
+            pendingLoadState = null;
+        } else {
+            playerStats.reset(); // Resetear para partida nueva
+        }
+
         navesDestruidas = new Stack<>(); // Inicializar stack de naves destruidas
 
         initGridPane(gridPanePlayer, margins, size, 45);
         initGridPane(gridPaneIA, margins, size, 45);
         initShips();
         restoreVisuals();
+
+        // Iniciar el temporizador
+        if (labelTimer != null) {
+            gameTimer = new com.example.myfirstnavalbattle.model.GameTimerThread(labelTimer);
+            gameTimer.start();
+        }
     }
 
     private void restoreVisuals() {
@@ -586,6 +622,15 @@ public class GameController {
                 SceneManager.switchTo("LostScene");
             }
 
+            // Borrar la partida guardada para evitar "Ghost Games" (partidas ya terminadas
+            // que se pueden cargar)
+            GameSaver.deleteGame(playerStats.getCurrentProfileName());
+
+            // Detener el timer
+            if (gameTimer != null) {
+                gameTimer.stopTimer();
+            }
+
             // GUARDAR DATOS EN CSV
             saveProfileStats();
 
@@ -599,124 +644,14 @@ public class GameController {
         ProfileManager manager = new ProfileManager();
         String name = playerStats.getCurrentProfileName();
 
-        // FIX: Use the global counters from GameStatistics which are already updated in
-        // finishGame
-        // GameStatistics.incrementTotalGames... are called before this method.
-        // We get total games from the GameStatistics singleton which is the source of
-        // truth for the session.
-        // However, GameStatistics needs to expose getters for these static totals if
-        // they are private static.
-        // Looking at GameStatistics, they seem private static but have
-        // setters/incrementers.
-        // We need to check if there are getters. If not, we might need to modify
-        // GameStatistics or assume
-        // that we should use the ProfileManager to read -> add -> save, BUT
-        // GameStatistics ALREADY increments them?
-        // Let's check finishGame:
-        // playerStats.incrementTotalGamesPlayed();
+        // Usar los contadores globales oficiales de GameStatistics
+        int played = playerStats.getTotalGamesPlayed();
+        int won = playerStats.getTotalGamesWon();
+        int lost = playerStats.getTotalGamesLost();
 
-        // So playerStats (singleton) holds the updated values IF they are exposed.
-        // Looking at the file view of GameStatistics.java earlier:
-        // It has NO getters for totalGamesPlayed/Won/Lost. It only has setters and
-        // incrementers.
-        // This is a design flaw in GameStatistics.
-        // HOWEVER, AccountSelectionController sets them into GameStatistics on load:
-        // gs.setTotalGamesPlayed(p.getPlayed());
+        System.out.println("[SAVE] Guardando perfil: " + name + " | Jugadas=" + played);
 
-        // So GameStatistics "Should" have the correct total count.
-        // Since we cannot get them directly from GameStatistics (unless we add getters,
-        // which we should),
-        // we will READ from file, ADD 1 (since we just finished a game), and SAVE.
-        // THIS MATCHES the logic: `int played = profile.getPlayed() + 1;`
-
-        // Wait, if we use the old logic:
-        // int played = profile.getPlayed() + 1;
-        // This is correct because we just finished ONE game.
-        // The issue 'Stats don't save correctly' implies they might be overwritten or
-        // desynced.
-        // If we opened the app, AccountSelection loaded stats into GameStats.
-        // We play. GameStats increments its internal counters.
-        // We save using ProfileManager reading from disk + 1.
-        // This seems redundant but correct IF disk and GameStats were in sync.
-
-        // PROBLEM: If I play 2 games in a row without restarting?
-        // Game 1: Disk=10. GameStats=10. Play. GameStats=11. Save: Read(10)+1 = 11.
-        // Write 11. CORRECT.
-        // Game 2: Disk=11. GameStats=11. Play. GameStats=12. Save: Read(11)+1 = 12.
-        // Write 12. CORRECT.
-
-        // SO WHY did the user say "Las estadisticas no se guardan correctamente"?
-        // Maybe "Si cierro el programa, lo abro e ingreso con un perfil registrado, que
-        // cargue correctamente sus stats."
-        // implies they weren't loading?
-        // In AccountSelectionController:
-        // GameStatistics.getInstance().setCurrentProfileName(selected);
-        // ProfileManager.Profile p = ...
-        // gs.setTotalGamesPlayed(p.getPlayed());
-        // This looks correct.
-
-        // Maybe the issue is simpler: GameStatistics has these fields as `static`.
-        // `private static int totalGamesPlayed = 0;`
-        // If I switch user, do they reset?
-        // AccountSelectionController calls:
-        // gs.setTotalGamesPlayed(p.getPlayed()); (Update: yes it sets them).
-
-        // BUT `GameStatistics.reset()` is called in `GameController.initialize()`:
-        // `playerStats.reset();`
-        // Let's check `reset()` in GameStatistics.
-        // public void reset() { initializeStats(); } -> resets "disparosTotales",
-        // "aciertos" etc.
-        // It does NOT reset totalGamesPlayed.
-
-        // WAIT.
-        // `finishGame` calls `playerStats.incrementTotalGamesPlayed()`.
-        // AND `saveProfileStats` calls `manager.saveOrUpdateProfile(...,
-        // profile.getPlayed() + 1, ...)`
-        // These are independent.
-        // PROPOSAL: To be absolutely safe and consistent, we should use the values from
-        // GameStatistics
-        // because that tracks the *memory* state. But since GameStatistics has no
-        // getters for totals,
-        // I will add them to GameStatistics.java first, then use them here.
-
-        // Start by fixing GameStatistics.java to have getters. (I will do this in the
-        // next tool call if needed,
-        // but I can't do it in this multi_replace strictly to GameStatistics if I'm
-        // editing GameController).
-        // Actually I can edit both.
-
-        // For now, I'll assume I'll add the getters `getTotalGamesPlayed`, etc. to
-        // GameStatistics.
-
-        // int played = playerStats.getTotalGamesPlayed();
-        // int won = playerStats.getTotalGamesWon();
-        // int lost = playerStats.getTotalGamesLost();
-
-        // This ensures what we have in memory (which drives the UI, presumably) is what
-        // we save.
-
-        // Wait, GameController.finishGame increments them right before calling
-        // saveProfileStats.
-        // "playerStats.incrementTotalGamesPlayed();"
-
-        // So checking GameStatistics is the most robust way.
-        // I will act on GameStatistics.java first or simultaneously.
-
-        // Since I cannot call a method that doesn't exist yet, I will use the
-        // `multi_replace` to add getters to GameStatistics.java
-        // AND update GameController.java to use them.
-
-        // But wait, the previous code in saveProfileStats was:
-        // ProfileManager.Profile profile = manager.getProfile(name);
-        // int played = profile.getPlayed() + 1;
-
-        // If I trust GameStatistics, I don't need to read the profile from disk again.
-
-        manager.saveOrUpdateProfile(name,
-                playerStats.getTotalGamesPlayed(),
-                playerStats.getTotalGamesWon(),
-                playerStats.getTotalGamesLost(),
-                generateShipStatusSummary());
+        manager.saveOrUpdateProfile(name, played, won, lost, generateShipStatusSummary());
     }
 
     private String generateShipStatusSummary() {
@@ -858,7 +793,29 @@ public class GameController {
 
     @FXML
     private void handleBackButton() throws IOException {
-        saveGameState(); // Guardar antes de salir
+        saveGameState(); // Guardar el estado del juego (posición, etc)
+
+        // FIX: También guardar las estadísticas para que no se pierdan al salir
+        // Nota: Si sales a mitad de partida, no se cuenta como jugada/ganada/perdida,
+        // pero DEBEMOS asegurar que la consistencia se mantenga si fuera necesario.
+        // Sin embargo, el user se quejó de que "se reseteó". Si salió, no terminó.
+        // Si no terminó, no debería incrementar contadores de partida jugada?
+        // Pero si el sistema "resetea", quizas es porque no recargamos bien al volver?
+        // Por ahora, solo guardamos si finalizamos. Si es BackButton, quizás no
+        // deberíamos
+        // contar la partida. Pero si el usuario dice "Se reseteó", quizás se refiere
+        // a que sus stats ANTERIORES se borraron?
+        // No, ProfileManager.saveOrUpdate SOBRESCRIBE.
+        // Si llamamos a saveProfileStats aqui SIN incrementar jugadas,
+        // se guardaría solo el ShipStatus actual?
+        // Mejor NO guardar stats aqui si la partida no acabó, para evitar corrupcion.
+        // El SaveGameState guarda el estado completo.
+
+        // Pero el timer debe detenerse.
+        if (gameTimer != null) {
+            gameTimer.stopTimer();
+        }
+
         SceneManager.switchTo("HomeScene");
     }
 }

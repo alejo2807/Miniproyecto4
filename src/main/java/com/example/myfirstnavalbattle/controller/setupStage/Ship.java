@@ -7,7 +7,9 @@ import javafx.scene.shape.Rectangle;
 
 import java.util.Objects;
 
-public class Ship extends Rectangle {
+import com.example.myfirstnavalbattle.model.IShip;
+
+public class Ship extends Rectangle implements IShip {
 
     private ImagePattern currentImage;
     private ImagePattern imageVertical;
@@ -19,7 +21,7 @@ public class Ship extends Rectangle {
     public static Ship currentlyDraggedShip;
 
     public Ship(int size) {
-        switch (size){
+        switch (size) {
             case 1:
                 setImages(1);
                 setHeight(40);
@@ -47,20 +49,18 @@ public class Ship extends Rectangle {
         vertical = true;
     }
 
-    private void setImages(int numImage){
+    private void setImages(int numImage) {
         imageVertical = createImage(numImage, true);
         imageHorizontal = createImage(numImage, false);
         currentImage = imageVertical;
         setFill(currentImage);
     }
 
-
-    public void rotateShip(){
-        if(vertical){
+    public void rotateShip() {
+        if (vertical) {
             vertical = false;
             currentImage = imageHorizontal;
-        }
-        else{
+        } else {
             vertical = true;
             currentImage = imageVertical;
         }
@@ -70,22 +70,30 @@ public class Ship extends Rectangle {
         setWidth(newHeight);
     }
 
-
-    private ImagePattern createImage(int size, boolean vertical){
-        String rotation = (vertical)? "VERTICAL" : "HORIZONTAL";
+    private ImagePattern createImage(int size, boolean vertical) {
+        String rotation = (vertical) ? "VERTICAL" : "HORIZONTAL";
         return new ImagePattern(new Image(
                 Objects.requireNonNull(AnimationsManager.class.getResourceAsStream(
-                        "/com/example/myfirstnavalbattle/Images/ships/SIZE_"+ size +"_"+rotation+".png"))));
+                        "/com/example/myfirstnavalbattle/Images/ships/SIZE_" + size + "_" + rotation + ".png"))));
     }
 
-    public Image getImage(){
+    @Override
+    public Image getImage() {
         return currentImage.getImage();
     }
 
+    @Override
     public boolean isVertical() {
         return vertical;
     }
+
+    @Override
     public int getSize() {
         return size;
+    }
+
+    @Override
+    public Object getUserData() {
+        return super.getUserData();
     }
 }

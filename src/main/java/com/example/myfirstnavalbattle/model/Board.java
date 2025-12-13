@@ -259,8 +259,8 @@ public class Board {
     }
 
     public ModelCell getCell(int row, int col) {
-        if (row >= size || col >= size) {
-            return null;
+        if (row < 0 || row >= size || col < 0 || col >= size) {
+            throw new IllegalArgumentException("Coordenadas fuera del tablero: [" + row + "," + col + "]");
         }
         return cells[row][col];
     }

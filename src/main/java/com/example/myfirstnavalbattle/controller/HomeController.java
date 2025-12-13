@@ -59,6 +59,11 @@ public class HomeController {
                 GameController.setPlayerOne(p1);
                 GameController.setPlayerIA(ia);
 
+                // Set pending state to restore stats in GameController
+                GameController.setPendingLoadState(state);
+
+                SceneManager.switchTo("GameScene");
+
                 SceneManager.switchTo("GameScene");
             } else {
                 showError("Error", "No se pudo cargar la partida guardada.");

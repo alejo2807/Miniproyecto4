@@ -46,6 +46,21 @@ public class GameSaver {
         return allSaves.containsKey(playerName);
     }
 
+    /**
+     * Deletes a saved game for the player (e.g., when game is finished)
+     * 
+     * @param playerName The name of the player
+     * @return true if successful
+     */
+    public static boolean deleteGame(String playerName) {
+        HashMap<String, GameState> allSaves = loadAllSaves();
+        if (allSaves.containsKey(playerName)) {
+            allSaves.remove(playerName);
+            return writeAllSaves(allSaves);
+        }
+        return false;
+    }
+
     @SuppressWarnings("unchecked")
     private static HashMap<String, GameState> loadAllSaves() {
         File file = new File(UNIFIED_SAVE_FILE);
