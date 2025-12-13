@@ -140,6 +140,18 @@ public class GameStatistics {
         totalGamesPlayed++;
     }
 
+    public int getTotalGamesPlayed() {
+        return totalGamesPlayed;
+    }
+
+    public int getTotalGamesWon() {
+        return totalGamesWon;
+    }
+
+    public int getTotalGamesLost() {
+        return totalGamesLost;
+    }
+
     /**
      * Incrementa el contador de partidas ganadas
      */

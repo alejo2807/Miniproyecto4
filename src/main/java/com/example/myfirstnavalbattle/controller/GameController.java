@@ -197,6 +197,14 @@ public class GameController {
     private void restoreVisuals() {
         restoreGridVisuals(playerOneBoard, stackPanesOfPlayer);
         restoreGridVisuals(playerIABoard, stackPanesOfIA);
+
+        // FIX: Restore visibility of destroyed enemy ships
+        for (Ship ship : iaShips) {
+            if (!isShipAlive(ship, playerIABoard)) {
+                int[] coords = (int[]) ship.getUserData();
+                setImageVisibility(coords[0], coords[1]);
+            }
+        }
     }
 
     private void restoreGridVisuals(Board board, StackPane[][] panes) {
@@ -590,22 +598,125 @@ public class GameController {
     private void saveProfileStats() {
         ProfileManager manager = new ProfileManager();
         String name = playerStats.getCurrentProfileName();
-        // Recalcular stats totales leyendo del CSV o asumiendo que playerStats tiene
-        // los globales correctos
-        // Nota: playerStats tiene contadores de sesión estáticos.
-        // Lo ideal sería leer del manager, actualizar y guardar.
-        // Por simplicidad, usaremos los contadores globales de GameStatistics
-        // Sin embargo, GameStatistics los resetea? No, son estáticos.
-        // Pero para ser robustos, leemos el perfil actual del manager
 
-        ProfileManager.Profile profile = manager.getProfile(name);
-        int played = profile.getPlayed() + 1;
-        int won = profile.getWon() + (playerIA.isHasLost() ? 1 : 0);
-        int lost = profile.getLost() + (playerOne.isHasLost() ? 1 : 0);
+        // FIX: Use the global counters from GameStatistics which are already updated in
+        // finishGame
+        // GameStatistics.incrementTotalGames... are called before this method.
+        // We get total games from the GameStatistics singleton which is the source of
+        // truth for the session.
+        // However, GameStatistics needs to expose getters for these static totals if
+        // they are private static.
+        // Looking at GameStatistics, they seem private static but have
+        // setters/incrementers.
+        // We need to check if there are getters. If not, we might need to modify
+        // GameStatistics or assume
+        // that we should use the ProfileManager to read -> add -> save, BUT
+        // GameStatistics ALREADY increments them?
+        // Let's check finishGame:
+        // playerStats.incrementTotalGamesPlayed();
 
-        String shipStatus = generateShipStatusSummary();
+        // So playerStats (singleton) holds the updated values IF they are exposed.
+        // Looking at the file view of GameStatistics.java earlier:
+        // It has NO getters for totalGamesPlayed/Won/Lost. It only has setters and
+        // incrementers.
+        // This is a design flaw in GameStatistics.
+        // HOWEVER, AccountSelectionController sets them into GameStatistics on load:
+        // gs.setTotalGamesPlayed(p.getPlayed());
 
-        manager.saveOrUpdateProfile(name, played, won, lost, shipStatus);
+        // So GameStatistics "Should" have the correct total count.
+        // Since we cannot get them directly from GameStatistics (unless we add getters,
+        // which we should),
+        // we will READ from file, ADD 1 (since we just finished a game), and SAVE.
+        // THIS MATCHES the logic: `int played = profile.getPlayed() + 1;`
+
+        // Wait, if we use the old logic:
+        // int played = profile.getPlayed() + 1;
+        // This is correct because we just finished ONE game.
+        // The issue 'Stats don't save correctly' implies they might be overwritten or
+        // desynced.
+        // If we opened the app, AccountSelection loaded stats into GameStats.
+        // We play. GameStats increments its internal counters.
+        // We save using ProfileManager reading from disk + 1.
+        // This seems redundant but correct IF disk and GameStats were in sync.
+
+        // PROBLEM: If I play 2 games in a row without restarting?
+        // Game 1: Disk=10. GameStats=10. Play. GameStats=11. Save: Read(10)+1 = 11.
+        // Write 11. CORRECT.
+        // Game 2: Disk=11. GameStats=11. Play. GameStats=12. Save: Read(11)+1 = 12.
+        // Write 12. CORRECT.
+
+        // SO WHY did the user say "Las estadisticas no se guardan correctamente"?
+        // Maybe "Si cierro el programa, lo abro e ingreso con un perfil registrado, que
+        // cargue correctamente sus stats."
+        // implies they weren't loading?
+        // In AccountSelectionController:
+        // GameStatistics.getInstance().setCurrentProfileName(selected);
+        // ProfileManager.Profile p = ...
+        // gs.setTotalGamesPlayed(p.getPlayed());
+        // This looks correct.
+
+        // Maybe the issue is simpler: GameStatistics has these fields as `static`.
+        // `private static int totalGamesPlayed = 0;`
+        // If I switch user, do they reset?
+        // AccountSelectionController calls:
+        // gs.setTotalGamesPlayed(p.getPlayed()); (Update: yes it sets them).
+
+        // BUT `GameStatistics.reset()` is called in `GameController.initialize()`:
+        // `playerStats.reset();`
+        // Let's check `reset()` in GameStatistics.
+        // public void reset() { initializeStats(); } -> resets "disparosTotales",
+        // "aciertos" etc.
+        // It does NOT reset totalGamesPlayed.
+
+        // WAIT.
+        // `finishGame` calls `playerStats.incrementTotalGamesPlayed()`.
+        // AND `saveProfileStats` calls `manager.saveOrUpdateProfile(...,
+        // profile.getPlayed() + 1, ...)`
+        // These are independent.
+        // PROPOSAL: To be absolutely safe and consistent, we should use the values from
+        // GameStatistics
+        // because that tracks the *memory* state. But since GameStatistics has no
+        // getters for totals,
+        // I will add them to GameStatistics.java first, then use them here.
+
+        // Start by fixing GameStatistics.java to have getters. (I will do this in the
+        // next tool call if needed,
+        // but I can't do it in this multi_replace strictly to GameStatistics if I'm
+        // editing GameController).
+        // Actually I can edit both.
+
+        // For now, I'll assume I'll add the getters `getTotalGamesPlayed`, etc. to
+        // GameStatistics.
+
+        // int played = playerStats.getTotalGamesPlayed();
+        // int won = playerStats.getTotalGamesWon();
+        // int lost = playerStats.getTotalGamesLost();
+
+        // This ensures what we have in memory (which drives the UI, presumably) is what
+        // we save.
+
+        // Wait, GameController.finishGame increments them right before calling
+        // saveProfileStats.
+        // "playerStats.incrementTotalGamesPlayed();"
+
+        // So checking GameStatistics is the most robust way.
+        // I will act on GameStatistics.java first or simultaneously.
+
+        // Since I cannot call a method that doesn't exist yet, I will use the
+        // `multi_replace` to add getters to GameStatistics.java
+        // AND update GameController.java to use them.
+
+        // But wait, the previous code in saveProfileStats was:
+        // ProfileManager.Profile profile = manager.getProfile(name);
+        // int played = profile.getPlayed() + 1;
+
+        // If I trust GameStatistics, I don't need to read the profile from disk again.
+
+        manager.saveOrUpdateProfile(name,
+                playerStats.getTotalGamesPlayed(),
+                playerStats.getTotalGamesWon(),
+                playerStats.getTotalGamesLost(),
+                generateShipStatusSummary());
     }
 
     private String generateShipStatusSummary() {
