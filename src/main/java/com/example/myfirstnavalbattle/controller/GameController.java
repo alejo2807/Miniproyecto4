@@ -803,23 +803,6 @@ public class GameController {
     private void handleBackButton() throws IOException {
         saveGameState(); // Guardar el estado del juego (posición, etc)
 
-        // FIX: También guardar las estadísticas para que no se pierdan al salir
-        // Nota: Si sales a mitad de partida, no se cuenta como jugada/ganada/perdida,
-        // pero DEBEMOS asegurar que la consistencia se mantenga si fuera necesario.
-        // Sin embargo, el user se quejó de que "se reseteó". Si salió, no terminó.
-        // Si no terminó, no debería incrementar contadores de partida jugada?
-        // Pero si el sistema "resetea", quizas es porque no recargamos bien al volver?
-        // Por ahora, solo guardamos si finalizamos. Si es BackButton, quizás no
-        // deberíamos
-        // contar la partida. Pero si el usuario dice "Se reseteó", quizás se refiere
-        // a que sus stats ANTERIORES se borraron?
-        // No, ProfileManager.saveOrUpdate SOBRESCRIBE.
-        // Si llamamos a saveProfileStats aqui SIN incrementar jugadas,
-        // se guardaría solo el ShipStatus actual?
-        // Mejor NO guardar stats aqui si la partida no acabó, para evitar corrupcion.
-        // El SaveGameState guarda el estado completo.
-
-        // Pero el timer debe detenerse.
         if (gameTimer != null) {
             gameTimer.stopTimer();
         }
