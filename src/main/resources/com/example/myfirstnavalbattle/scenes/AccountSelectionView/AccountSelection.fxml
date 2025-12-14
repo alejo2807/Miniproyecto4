@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" styleClass="root" stylesheets="@AccountSelectionStyle.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myfirstnavalbattle.controller.AccountSelectionController">
+   <children>
+      <VBox alignment="CENTER" spacing="20.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0">
+         <children>
+            <HBox alignment="CENTER_LEFT">
+               <children>
+                  <Button mnemonicParsing="false" onAction="#handleBack" styleClass="back-button" text="&lt; Volver" />
+                  <Label styleClass="title-label" text="SELECCIONAR PERFIL">
+                     <HBox.margin>
+                        <Insets left="80.0" />
+                     </HBox.margin>
+                  </Label>
+               </children>
+            </HBox>
+            
+            <ListView fx:id="profileListView" prefHeight="200.0" prefWidth="200.0" />
+            
+            <HBox alignment="CENTER" spacing="15.0">
+               <children>
+                  <TextField fx:id="nameField" prefHeight="30.0" prefWidth="200.0" promptText="Nombre de nuevo perfil" />
+                  <Button mnemonicParsing="false" onAction="#handleAddProfile" styleClass="action-button" text="Crear" />
+               </children>
+            </HBox>
+            
+            <HBox alignment="CENTER" spacing="50.0">
+               <children>
+                  <Button mnemonicParsing="false" onAction="#handleSelectProfile" prefHeight="40.0" prefWidth="120.0" styleClass="action-button" text="SELECCIONAR" />
+                  <Button mnemonicParsing="false" onAction="#handleDeleteProfile" styleClass="delete-button" text="Eliminar" />
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>

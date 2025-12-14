@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.shape.Circle?>
+
+<AnchorPane fx:id="anchorPane" prefHeight="400.0" prefWidth="600.0" styleClass="AnchorPane" stylesheets="@GameSceneStyle.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myfirstnavalbattle.controller.GameController">
+
+    <GridPane fx:id="gridPaneIA" layoutX="800" layoutY="220" styleClass="GridPane">
+    </GridPane>
+
+    <GridPane fx:id="gridPanePlayer" layoutX="300" layoutY="220" styleClass="GridPane">
+    </GridPane>
+
+    <Button layoutX="20" layoutY="20" onAction="#handleBackButton" styleClass="back-button">
+    </Button>
+
+    <Circle layoutX="350" layoutY="165" radius="50" styleClass="Circle">
+    </Circle>
+
+    <Circle layoutX="855" layoutY="165" radius="50" styleClass="Circle">
+    </Circle>
+
+    <Circle fx:id="playerOneCharacter" layoutX="350" layoutY="165" radius="50">
+    </Circle>
+
+
+    <Circle fx:id="playerTwoCharacter" layoutX="855" layoutY="165" radius="50">
+    </Circle>
+
+    <Label fx:id="labelName" layoutX="415" layoutY="145" styleClass="Title">
+    </Label>
+
+    <Label layoutX="920" layoutY="145" styleClass="Title" text="Jugador CPU">
+    </Label>
+
+    <Label fx:id="labelTimer" layoutX="1050" layoutY="20" styleClass="Title" text="00:00" />
+
+    <Label fx:id="labelShipDestroyed" layoutX="280" layoutY="700" styleClass="ship-notification" stylesheets="@GameSceneStyle.css" visible="false">
+    </Label>
+
+</AnchorPane>
