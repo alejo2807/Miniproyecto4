@@ -3,7 +3,7 @@
 A Naval Battle game built with JavaFX, demonstrating advanced Object-Oriented Programming concepts, Design Patterns, and Threading.
 
 ## Authors
-- **David - Brandon**
+- **David García- Brandon Franco**
 
 ## Features
 - **MVC Architecture**: Clear separation of concerns.
