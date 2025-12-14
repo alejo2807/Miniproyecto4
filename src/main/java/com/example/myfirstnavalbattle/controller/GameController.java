@@ -203,6 +203,7 @@ public class GameController {
         iaShips = playerIABoard.getShips();
         iaShipsImageView = new ArrayList<>();
         // Initialize queue of targets
+        objetivosIA = new LinkedList<>();
         playerStats = GameStatisticsController.getGameStatistics(); // Get shared statistics instance
         // playerStats = GameStatisticsController.getGameStatistics(); // Get shared
         // statistics instance (Duplicated line removed)
